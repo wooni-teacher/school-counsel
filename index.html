@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
 <style>
 /* VOICE: 다정하고 조용하게 — 아이가 겁먹지 않는 말투, 선생님 화면은 차분한 정리
-   IDEA: 두 언덕을 잇는 다리 — 여학생들의 마음과 남학생의 마음이 선생님을 통해 오가는 길
+   IDEA: 두 언덕을 잇는 다리 — 이야기를 들려준 친구들과 대화할 친구의 마음이 선생님을 통해 오가는 길
    PICTURE: 첫 화면의 다리 그림, 진행 중에는 크게 누르는 카드 자체가 그림
    COLOUR and TYPE: 노을빛 살구 바탕, 산호색 강조, 짙은 청록 보조 / Jua 제목 + Gowun Dodum 본문
    LAYOUT: 한 열, 큰 탭 버튼, 태블릿 기준 폭 760px */
@@ -61,7 +61,9 @@ details{border-top:1px solid var(--line);padding:10px 0}summary{cursor:pointer;f
 ul{margin:.4em 0;padding-left:1.2em}li{margin:.25em 0}
 .pinw{max-width:420px;margin:0 auto;text-align:center}.pdots{display:flex;gap:14px;justify-content:center;margin:18px 0 22px}.pdots i{width:18px;height:18px;border-radius:50%;border:2px solid var(--pri)}.pdots i.on{background:var(--pri)}
 .pad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.pad .chip{min-height:72px;font-size:26px;font-family:Jua,sans-serif}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:14px;font-size:16px}
+.cname{width:100%;max-width:320px;font:inherit;font-size:18px;padding:10px 14px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--ink);margin-top:6px}
+.imgw{position:fixed;inset:0;background:#000a;display:grid;place-items:center;padding:16px;z-index:9}.imgw>div{background:var(--card);border-radius:22px;padding:16px;max-width:520px;width:100%;max-height:100%;overflow:auto;display:grid;gap:12px}.imgw img{width:100%;border-radius:14px;display:block}
+.toast{z-index:10;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:14px;font-size:16px}
 @media(prefers-reduced-motion:reduce){.hold.on i{transition:none}.chip{transition:none}}
 @media(max-width:600px){.br{grid-template-columns:minmax(0,1fr) 70px 2em}}
 </style>
@@ -221,7 +223,7 @@ function flowHTML(){
 function counts(k,opts){const c=opts.map(o=>[o,S.stories.filter(s=>(Array.isArray(s[k])?s[k]:[s[k]]).includes(o)).length]);return c.filter(x=>x[1]>0)}
 function bars(title,k,opts,pick){
  const c=counts(k,opts),max=Math.max(1,...c.map(x=>x[1])),sh=union(k,shared()),pk=pick?pickOf(k):[];
- return `<div class="box"><h3>${title}</h3>${pick?'<p class="lock">체크한 내용만 남학생 화면에 보여요. 선생님만 알고 있기로 한 내용은 고를 수 없어요.</p>':''}
+ return `<div class="box"><h3>${title}</h3>${pick?'<p class="lock">체크한 내용만 대화할 친구의 화면에 보여요. 선생님만 알고 있기로 한 내용은 고를 수 없어요.</p>':''}
  ${c.length?c.map(([o,n])=>`<div class="br"><label>${pick?`<input type="checkbox" data-pick="${k}" value="${esc(o)}" ${pk.includes(o)?'checked':''} ${sh.includes(o)?'':'disabled'}>`:''}<span>${esc(o)}</span></label><div class="bar"><i style="width:${n/max*100}%"></i></div><b>${n}</b></div>`).join(''):'<p class="mut">아직 없어요.</p>'}</div>`;
 }
 function teacherHTML(){
@@ -229,22 +231,22 @@ function teacherHTML(){
  return `<div class="row2" style="justify-content:space-between"><h2>선생님 정리</h2><div class="row2"><button class="btn ghost sm" data-act="glogout">로그아웃</button><button class="btn ghost sm" data-act="home">처음 화면</button></div></div>
  <p class="lock">● 실시간 연결됨 · 새 이야기가 오면 바로 나타나요</p>
  <details class="box" ${n?'':'open'}><summary class="jua">상담 진행 가이드</summary>
- <ol><li><b>여학생들과 따로 듣기</b> — 여럿이 함께 말하면 의견이 한쪽으로 쏠려요. 한 명씩 이 앱으로 이야기를 남기게 해 주세요.</li><li><b>행동과 영향을 나눠 보기</b> — "고집이 세다" 대신 "팀을 정할 때 먼저 정해 버려서 말하기 어려웠다"처럼요.</li><li><b>남학생 이야기 먼저 듣기</b> — 남학생 화면은 체육 시간에 좋은 점과 답답한 점을 먼저 묻고 시작해요.</li><li><b>작은 약속 정하고 다시 확인하기</b> — 며칠 뒤 각자 따로 물어봐 주세요.</li></ol>
+ <ol><li><b>이야기를 들려줄 친구들과 따로 듣기</b> — 여럿이 함께 말하면 의견이 한쪽으로 쏠려요. 한 명씩 이 앱으로 이야기를 남기게 해 주세요.</li><li><b>행동과 영향을 나눠 보기</b> — "고집이 세다" 대신 "팀을 정할 때 먼저 정해 버려서 말하기 어려웠다"처럼요.</li><li><b>대화할 친구의 이야기 먼저 듣기</b> — 대화 화면은 체육 시간에 좋은 점과 답답한 점을 먼저 묻고 시작해요.</li><li><b>작은 약속 정하고 다시 확인하기</b> — 며칠 뒤 각자 따로 물어봐 주세요.</li></ol>
  <div class="say good">처음 꺼내는 말: "누가 잘못했는지 정하려는 자리가 아니야. 체육 시간에 서로 편하게 참여하려면 무엇을 바꾸면 좋을지 함께 알아보자."</div>
- <h3 style="margin-top:12px">대화 전 확인</h3><ul><li>상담 목적과 비밀을 지키는 범위를 쉬운 말로 설명했나요?</li><li>"무섭다"가 어떤 행동·상황인지 구체적으로 물었나요?</li><li>"소심하다"는 평가 대신, 의견을 말하기 쉬운 환경인지 살펴봤나요?</li><li>여학생들이 함께 남학생을 마주하는 방식은 피했나요?</li></ul>
+ <h3 style="margin-top:12px">대화 전 확인</h3><ul><li>상담 목적과 비밀을 지키는 범위를 쉬운 말로 설명했나요?</li><li>"무섭다"가 어떤 행동·상황인지 구체적으로 물었나요?</li><li>"소심하다"는 평가 대신, 의견을 말하기 쉬운 환경인지 살펴봤나요?</li><li>여러 친구가 함께 한 친구를 마주하는 방식은 피했나요?</li></ul>
  <div class="say" style="border-color:var(--pri)"><b>안전 관련 이야기가 나오면</b> 위협, 괴롭힘, 신체적 위험, 보복 걱정이 구체적으로 나오면 대화만으로 해결하려 하지 말고 학교의 보호 절차를 먼저 따라 주세요.</div></details>
  <div class="box stat"><div><b>${n}</b>이야기</div><div><b>${sh}</b>전달 동의</div><div><b>${n-sh}</b>선생님만</div></div>
  ${n?'':'<div class="box"><p>아직 들어온 이야기가 없어요. 화면이 어떻게 보이는지 먼저 확인하려면 예시를 넣어 보세요.</p><button class="btn sup sm" data-act="sample">예시 이야기 3개 넣기</button></div>'}
  ${bars('언제 힘들었나','when',WHEN)}${bars('어떤 일이 있었나','what',WHAT,1)}${bars('그때 마음','feel',FEEL)}
- ${bars('친구에게 바라는 것','wish',WISH,1)}${bars('여학생들이 스스로 해 볼 것','mine',MINE)}${bars('친구의 좋은 점','good',GOOD)}
+ ${bars('친구에게 바라는 것','wish',WISH,1)}${bars('친구들이 스스로 해 볼 것','mine',MINE)}${bars('친구의 좋은 점','good',GOOD)}
  <div class="box"><h3>친구별 기록</h3>${n?S.stories.map((s,i)=>`<details><summary>${esc(s.ani)} · ${s.share===SHARE[0]?'전달 동의':'선생님만'} · ${new Date(s.at).toLocaleDateString('ko-KR')}</summary>
   ${G.filter(st=>st.w).map(st=>{const c=s[st.k]||[],t=(s[st.k+'_t']||'').trim();return (c.length||t)?`<p style="margin-top:10px"><b>${esc(st.q)}</b></p>${c.length?`<p>${c.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</p>`:''}${t?`<div class="say">✏️ ${esc(t)}</div>`:''}`:''}).join('')}<p style="margin-top:10px"><b>더 하고 싶은 말</b></p>${s.text?`<div class="say">${esc(s.text)}</div>`:'<p class="mut">따로 쓴 말 없음</p>'}
   <button class="btn ghost sm" data-act="del" data-i="${esc(s.id)}">이 기록 지우기</button></details>`).join(''):'<p class="mut">아직 없어요.</p>'}
-  <p class="lock">직접 쓴 말(✏️)은 남학생 화면에 나오지 않아요. 필요하면 선생님 말로 바꿔 전해 주세요.</p></div>
- <div class="box"><h3>남학생과 대화하기 전에</h3><p class="mut">남학생 화면에는 몇 명이 말했는지 숫자가 나오지 않고, 좋은 점부터 보여 줘요.</p>
+  <p class="lock">직접 쓴 말(✏️)은 대화 화면에 나오지 않아요. 필요하면 선생님 말로 바꿔 전해 주세요.</p></div>
+ <div class="box"><h3>친구와 대화하기 전에</h3><p class="mut">대화 화면에는 몇 명이 말했는지 숫자가 나오지 않고, 좋은 점부터 보여 줘요.</p>
   <textarea id="note" placeholder="선생님의 한마디 (예: 너와 친구들이 체육 시간을 더 즐겁게 보냈으면 해서 이야기를 나누려고 해)">${esc(S.note)}</textarea>
   <label class="wl" for="follow">다시 확인할 때</label><textarea id="follow" class="w" placeholder="예: 다음 주 체육 수업 뒤, 각자 따로 짧게 확인하기">${esc(S.follow||'')}</textarea>
-  <div class="row2"><button class="btn ghost sm" data-act="sum" ${sh?'':'disabled'}>중립 요약 복사</button><button class="btn sup" data-act="boy" ${sh?'':'disabled'}>남학생과 대화 시작</button>${S.boy?'<button class="btn ghost sm" data-act="card">지난 약속 카드 보기</button>':''}</div></div>
+  <div class="row2"><button class="btn ghost sm" data-act="sum" ${sh?'':'disabled'}>중립 요약 복사</button><button class="btn sup" data-act="boy" ${sh?'':'disabled'}>친구와 대화 시작</button>${S.boy?'<button class="btn ghost sm" data-act="card">지난 약속 카드 보기</button>':''}</div></div>
  <div class="row2" style="margin-top:24px"><button class="btn ghost sm" data-act="wipe">${wipeArm?'정말 모두 지울까요? 한 번 더 누르세요':'모든 기록 지우기'}</button></div>`;
 }
 function cardText(){
@@ -252,13 +254,59 @@ function cardText(){
  const ad=(a,t)=>{t=(t||'').trim();return t?[...a,t]:a};
  return {prom:ad(b.prom||[],b.prom_t),bw:ad(b.wish||[],b.wish_t),mine:m,feel:ad(b.feel||[],b.feel_t),why:ad(b.why||[],b.why_t),pg:ad(b.pe_good||[],b.pe_good_t),ph:ad(b.pe_hard||[],b.pe_hard_t),date:b.at?new Date(b.at).toLocaleDateString('ko-KR'):''};
 }
+async function makeCard(){
+ const c=cardText(),h=hd(),W=1080,P=72,font='"Gowun Dodum",sans-serif',jua='Jua,"Gowun Dodum",sans-serif';
+ const secs=[{t:h.a,items:c.prom,col:'#e2553d',bg:'#ffe9e2'},{t:h.b,items:c.bw,col:'#1f5f6b',bg:'#e3f1f3'},{t:'친구들의 약속',items:c.mine,col:'#b8742a',bg:'#fff1d6'}];
+ const follow=((S.follow||'').trim()||'일주일 뒤에 선생님과 다시 이야기 나눠요.');
+ const all='우리의 약속 카드 잘 지킨 점을 먼저 찾아봐요 마음 다리 함께 정해요 선생님과 '+secs.map(x=>x.t+x.items.join('')).join('')+follow+c.date+'0123456789.·';
+ try{await Promise.all([document.fonts.load('64px Jua',all),document.fonts.load('40px "Gowun Dodum"',all)])}catch(e){}
+ const cv=document.createElement('canvas'),x=cv.getContext('2d');
+ const wrap=(t,f,max)=>{x.font=f;const out=[];let line='';for(const ch of String(t)){const tl=line+ch;if(x.measureText(tl).width>max&&line){const sp=line.lastIndexOf(' ');if(sp>line.length*0.5&&ch!==' '){out.push(line.slice(0,sp));line=line.slice(sp+1)+ch}else{out.push(line);line=ch.trim()}}else line=tl}if(line)out.push(line);return out};
+ const BF='40px '+font,HF='44px '+jua,LH=58,IW=W-P*2-56-40;
+ const lay=secs.map(sc=>{const ht=wrap(sc.t,HF,W-P*2-56);const items=(sc.items.length?sc.items:['선생님과 함께 정해요']).map(it=>wrap(it,BF,IW));const n=items.reduce((a,b)=>a+b.length,0);return {...sc,ht,items,h:40+ht.length*56+16+n*LH+(items.length-1)*14+36}});
+ const fl=wrap(follow+' 잘 지킨 점을 먼저 찾아봐요.',BF,W-P*2);
+ const HEAD=430,H=HEAD+lay.reduce((a,b)=>a+b.h+28,0)+fl.length*LH+150;
+ cv.width=W;cv.height=H;
+ x.fillStyle='#fff4e8';x.fillRect(0,0,W,H);
+ const g=x.createLinearGradient(0,0,0,HEAD);g.addColorStop(0,'#ffcfa6');g.addColorStop(1,'#fff0e0');x.fillStyle=g;x.fillRect(0,0,W,HEAD);
+ x.fillStyle='#ffb27d';x.beginPath();x.arc(W-150,110,62,0,7);x.fill();
+ x.fillStyle='#f08a6b';x.beginPath();x.moveTo(0,HEAD);x.lineTo(0,300);x.quadraticCurveTo(160,250,340,300);x.lineTo(340,HEAD);x.fill();
+ x.fillStyle='#3f8692';x.beginPath();x.moveTo(W,HEAD);x.lineTo(W,300);x.quadraticCurveTo(W-160,250,W-340,300);x.lineTo(W-340,HEAD);x.fill();
+ x.fillStyle='#8cc9d1';x.fillRect(340,HEAD-70,W-680,70);
+ x.strokeStyle='#7a4a3a';x.lineWidth=16;x.lineCap='round';x.beginPath();x.moveTo(320,312);x.quadraticCurveTo(W/2,190,W-320,312);x.stroke();
+ const hx=W/2,hy=236;x.fillStyle='#e2553d';x.beginPath();x.moveTo(hx,hy+26);x.bezierCurveTo(hx-46,hy-6,hx-24,hy-44,hx,hy-18);x.bezierCurveTo(hx+24,hy-44,hx+46,hy-6,hx,hy+26);x.fill();
+ x.fillStyle='#2d2522';x.textBaseline='top';x.font='76px '+jua;x.fillText('우리의 약속 카드',P,64);
+ x.font='36px '+font;x.fillStyle='#6b5a52';x.fillText(c.date+' · 마음 다리',P,160);
+ let y=HEAD+30;
+ const rr=(X,Y,w,h,r)=>{x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+w,Y,X+w,Y+h,r);x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.closePath()};
+ lay.forEach(sc=>{rr(P,y,W-P*2,sc.h,32);x.fillStyle=sc.bg;x.fill();
+  let yy=y+40;x.fillStyle=sc.col;x.font=HF;sc.ht.forEach(l=>{x.fillText(l,P+28,yy);yy+=56});yy+=16;
+  x.font=BF;sc.items.forEach(lines=>{x.fillStyle=sc.col;x.beginPath();x.arc(P+44,yy+24,9,0,7);x.fill();x.fillStyle='#2d2522';lines.forEach(l=>{x.fillText(l,P+76,yy);yy+=LH});yy+=14});
+  y+=sc.h+28});
+ x.fillStyle='#6b5a52';x.font=BF;fl.forEach(l=>{x.fillText(l,P,y+10);y+=LH});
+ x.fillStyle='#e2553d';x.font='32px '+jua;x.fillText('♥ 마음 다리',P,H-80);
+ return new Promise(r=>cv.toBlob(r,'image/png'));
+}
+async function showCard(){
+ toast('카드를 만들고 있어요');
+ const blob=await makeCard();if(!blob){toast('이미지를 만들지 못했어요');return}
+ const url=URL.createObjectURL(blob),name=`약속카드-${(cardName.trim()||'우리')}-${new Date().toISOString().slice(0,10)}.png`;
+ const file=new File([blob],name,{type:'image/png'}),canShare=!!(navigator.canShare&&navigator.canShare({files:[file]}));
+ const w=document.createElement('div');w.className='imgw';
+ w.innerHTML=`<div><img alt="약속 카드 이미지" src="${url}"><div class="row2"><a class="btn" href="${url}" download="${esc(name)}" style="text-decoration:none;display:inline-flex;align-items:center">이미지 저장</a>${canShare?'<button class="btn sup" data-s>보내기</button>':''}<button class="btn ghost sm" data-c>닫기</button></div><p class="mut">이미지를 저장해서 학생 태블릿이나 클래스 앱으로 보내 주세요.</p></div>`;
+ w.addEventListener('click',async e=>{if(e.target===w||e.target.closest('[data-c]')){w.remove();URL.revokeObjectURL(url)}else if(e.target.closest('[data-s]')){try{await navigator.share({files:[file],title:'우리의 약속 카드'})}catch(err){}}});
+ document.body.appendChild(w);
+}
+let cardName='';
+const hd=()=>{const n=cardName.trim()||'나';return {a:`${n}의 약속`,b:`${n}의 바람: 친구들이 이렇게 해 주면 좋겠어`}};
 function cardHTML(){
  const c=cardText(),li=a=>a.length?`<ul>${a.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<p class="mut">선생님과 함께 정해요</p>';
  return `<div class="pcard"><div><h2>우리의 약속 카드</h2><p class="mut">${esc(c.date)} · 체육 시간을 모두에게 즐겁게</p></div>
- <div class="cols"><div><h3>내가 해 볼 약속</h3>${li(c.prom)}</div><div><h3>내가 친구들에게 바라는 것</h3>${li(c.bw)}</div><div><h3>친구들이 해 볼 것</h3>${li(c.mine)}</div></div>
- <details><summary>선생님만 보기: 남학생의 마음과 이야기</summary><h3 style="margin-top:8px">체육 시간에 좋은 점</h3>${li(c.pg)}<h3>답답했던 점</h3>${li(c.ph)}<h3>이야기를 들은 마음</h3>${li(c.feel)}<h3>사실은…</h3>${li(c.why)}</details>
+ <label class="wl" for="cname">카드에 넣을 이름 <span class="mut">(안 쓰면 '나'로 나와요)</span></label><input id="cname" class="cname" value="${esc(cardName)}" placeholder="예: 민준" maxlength="10">
+ <div class="cols"><div><h3 id="h1">${esc(hd().a)}</h3>${li(c.prom)}</div><div><h3 id="h2">${esc(hd().b)}</h3>${li(c.bw)}</div><div><h3>친구들의 약속</h3>${li(c.mine)}</div></div>
+ <details><summary>선생님만 보기: 대화한 친구의 마음과 이야기</summary><h3 style="margin-top:8px">체육 시간에 좋은 점</h3>${li(c.pg)}<h3>답답했던 점</h3>${li(c.ph)}<h3>이야기를 들은 마음</h3>${li(c.feel)}<h3>사실은…</h3>${li(c.why)}</details>
  <p class="mut">${esc((S.follow||'').trim()||'일주일 뒤에 선생님과 다시 이야기 나눠요.')} 잘 지킨 점을 먼저 찾아봐요.</p></div>
- <div class="row2" style="margin-top:18px"><button class="btn sup sm" data-act="copy">글로 복사하기</button><button class="btn ghost sm" data-act="teacher">선생님 정리로</button></div>`;
+ <div class="row2" style="margin-top:18px"><button class="btn" data-act="img">카드 이미지 만들기</button><button class="btn sup sm" data-act="copy">글로 복사하기</button><button class="btn ghost sm" data-act="teacher">선생님 정리로</button></div>`;
 }
 
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1800)}
@@ -281,6 +329,7 @@ app.addEventListener('click',e=>{
   if(flow.who==='g'){sendStory(d)}else{S.boy=d;setState({boy:clean(d)});flow=null;go('card')}}
  else if(a==='teacher')go('teacher');
  else if(a==='pk')pinKey(b.dataset.k);
+ else if(a==='img')showCard();
  else if(a==='sum'){const sh=shared(),f=(k,x)=>{const a=union(k,sh);return a.length?a.map(y=>'- '+y).join('\n'):'- (더 확인해 보기)'};
   const txt=`친구 관계 대화 요약 (이름·발언자 없이 정리)\n\n[자주 나온 상황]\n${f('when')}\n\n[힘들었던 일]\n${f('what')}\n\n[친구들이 바라는 것]\n${f('wish')}\n\n[친구들이 스스로 해 볼 것]\n${f('mine').replace('- 아직 잘 모르겠어\n','')}\n\n[친구의 좋은 점]\n${f('good')}\n\n※ 전달에 동의한 이야기만 모았어요. 직접 쓴 글은 빠져 있어요.`;
   try{navigator.clipboard.writeText(txt).then(()=>toast('요약을 복사했어요'),()=>toast('복사가 막혀 있어요'))}catch(err){toast('복사가 막혀 있어요')}}
@@ -294,12 +343,13 @@ app.addEventListener('click',e=>{
   {ani:ANI[5],when:[WHEN[3]],what:[WHAT[5]],feel:[FEEL[1]],wish:[WISH[5]],mine:[MINE[4]],good:[GOOD[6]],text:'',share:SHARE[1],at:t}];S.stories.forEach(x=>{x.uid=user.uid;fb.db.ref('stories').push(clean(x))});S.stories=[];setState({picked:false})}
  else if(a==='wipe'){if(!wipeArm){wipeArm=true;render();return}wipeArm=false;if(isT()){fb.db.ref('stories').remove();fb.db.ref('teacher').remove()}render();toast('모두 지웠어요')}
  else if(a==='copy'){const c=cardText(),f=x=>x.length?x.map(y=>'- '+y).join('\n'):'- (함께 정하기)';
-  const txt=`우리의 약속 카드 (${c.date})\n\n[내가 해 볼 약속]\n${f(c.prom)}\n\n[내가 친구들에게 바라는 것]\n${f(c.bw)}\n\n[친구들이 해 볼 것]\n${f(c.mine)}`;
+  const txt=`우리의 약속 카드 (${c.date})\n\n[${hd().a}]\n${f(c.prom)}\n\n[${hd().b}]\n${f(c.bw)}\n\n[친구들의 약속]\n${f(c.mine)}`;
   try{navigator.clipboard.writeText(txt).then(()=>toast('복사했어요'),()=>toast('복사가 막혀 있어요'))}catch(err){toast('복사가 막혀 있어요')}}
 });
 app.addEventListener('input',e=>{
  if(e.target.id==='tx'&&flow)flow.d.text=e.target.value;
  if(e.target.id==='w'&&flow){const st=flow.steps[flow.i];flow.d[st.k+'_t']=e.target.value;const nb=app.querySelector('[data-act=next]');if(nb)nb.disabled=!valid(st)}
+ if(e.target.id==='cname'){cardName=e.target.value;const h=hd(),a1=document.getElementById('h1'),a2=document.getElementById('h2');if(a1)a1.textContent=h.a;if(a2)a2.textContent=h.b}
  if(e.target.id==='note'){S.note=e.target.value;debState({note:S.note})}
  if(e.target.id==='follow'){S.follow=e.target.value;debState({follow:S.follow})}
 });
