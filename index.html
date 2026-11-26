@@ -68,6 +68,9 @@ ul{margin:.4em 0;padding-left:1.2em}li{margin:.25em 0}
 </head>
 <body>
 <main class="wrap" id="app"></main>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
 {
 const ANI=['🐰 토끼','🐱 고양이','🐻 곰','🦊 여우','🐼 판다','🐧 펭귄','🐢 거북이','🐿️ 다람쥐','🦎 도마뱀'];
@@ -108,10 +111,40 @@ const B=[
  {k:'wish',q:'나도 친구들에게 바라는 게 있어',t:'multi',o:B_WISH,w:'친구들에게 바라는 걸 써 봐'}
 ];
 
-const KEY='maeum-dari-v1';
+const CFG={apiKey:"AIzaSyDaIRTcQbxfp_gQUAX3gLu3tnjkm_fsuw4",authDomain:"school-counsel.firebaseapp.com",databaseURL:"https://school-counsel-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"school-counsel",storageBucket:"school-counsel.firebasestorage.app",messagingSenderId:"1088686876670",appId:"1:1088686876670:web:accd834c1f8dfcdeb602af"};
+const T_EMAIL='zpr1120@gmail.com';
 let S={stories:[],note:'',picked:false,pick:{what:[],wish:[]},boy:null};
-try{const v=JSON.parse(localStorage.getItem(KEY)||'null');if(v)S=Object.assign(S,v)}catch(e){}
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+let fb=null,user=null,listening=false,loaded=false,sending=false;
+const arr=x=>Array.isArray(x)?x.filter(v=>v!=null):(x&&typeof x==='object'?Object.values(x):(x?[x]:[]));
+const AK=['when','what','feel','wish','mine','good','prom','why','pe_good','pe_hard'];
+const norm=o=>{o={...(o||{})};AK.forEach(k=>{if(k in o)o[k]=arr(o[k])});return o};
+const isT=()=>!!(user&&!user.isAnonymous&&user.email===T_EMAIL&&user.emailVerified);
+const typing=()=>{const a=document.activeElement;return a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT')};
+try{firebase.initializeApp(CFG);fb={auth:firebase.auth(),db:firebase.database()};
+ fb.auth.getRedirectResult().catch(e=>toast('로그인하지 못했어요'));
+ fb.auth.onAuthStateChanged(u=>{user=u;if(isT())listen();else unlisten();if(['teacher','card','pin'].includes(view))render()});
+}catch(e){fb=null}
+function listen(){if(listening)return;listening=true;
+ fb.db.ref('stories').on('value',snap=>{const v=snap.val()||{},prev=S.stories.length;S.stories=Object.entries(v).map(([id,s])=>({...norm(s),id})).sort((a,b)=>a.at<b.at?-1:1);
+  if(loaded&&S.stories.length>prev)toast('새 이야기가 도착했어요');loaded=true;if(['teacher','card'].includes(view)&&!typing())render()},e=>toast('기록을 읽을 권한이 없어요'));
+ fb.db.ref('teacher/state').on('value',snap=>{const v=snap.val()||{};S.note=v.note||'';S.follow=v.follow||'';S.picked=!!v.picked;
+  S.pick={what:arr(v.pick&&v.pick.what),wish:arr(v.pick&&v.pick.wish)};S.boy=v.boy?norm(v.boy):null;if(['teacher','card'].includes(view)&&!typing())render()})}
+function unlisten(){if(!listening)return;listening=false;loaded=false;fb.db.ref('stories').off();fb.db.ref('teacher/state').off();S.stories=[];S.boy=null}
+const setState=patch=>{if(isT())fb.db.ref('teacher/state').update(patch).catch(()=>toast('저장하지 못했어요'))};
+let noteT=null;const debState=patch=>{clearTimeout(noteT);noteT=setTimeout(()=>setState(patch),500)};
+const clean=o=>JSON.parse(JSON.stringify(o));
+async function sendStory(d){
+ if(!fb){toast('인터넷 연결을 확인해 줘');return}
+ if(sending)return;sending=true;render();
+ try{if(!fb.auth.currentUser)await fb.auth.signInAnonymously();d.uid=fb.auth.currentUser.uid;await fb.db.ref('stories').push(clean(d));flow=null;sending=false;authed=false;go('thanks')}
+ catch(e){sending=false;render();toast('보내지 못했어. 선생님께 말해 줘')}
+}
+function loginHTML(){
+ const wrong=user&&!user.isAnonymous;
+ return `<div class="row2" style="justify-content:space-between"><h2>선생님 로그인</h2><button class="btn ghost sm" data-act="home">처음 화면</button></div>
+ <div class="box"><p>아이들의 이야기는 선생님 Google 계정(${esc(T_EMAIL)})으로 로그인해야 볼 수 있어요.</p>
+ ${wrong?`<p class="lock">지금은 ${esc(user.email||'다른 계정')}으로 로그인되어 있어서 볼 수 없어요.</p>`:''}
+ <div class="row2" style="margin-top:12px"><button class="btn sup" data-act="glogin">Google로 로그인</button>${wrong?'<button class="btn ghost sm" data-act="glogout">로그아웃</button>':''}</div></div>`}
 const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const app=document.getElementById('app');
 let view='home',flow=null,wipeArm=false,authed=false,pin='',pinErr='';
@@ -162,13 +195,13 @@ function render(){
   <h1>마음 다리</h1><p>말하기 어려웠던 마음을 선생님께 살짝 전해 줘. 누르기만 하면 돼.</p>
   <div class="row2"><button class="btn" data-act="girl">내 이야기 들려주기</button>
   <button class="hold" data-act="teacher">선생님 화면</button></div></div>
-  <p class="mut" style="margin-top:14px">고른 내용은 이 기기 안에만 저장돼요.</p>`;
+  <p class="mut" style="margin-top:14px">보낸 이야기는 선생님만 볼 수 있어요.</p>`;
  else if(view==='flow') app.innerHTML=flowHTML();
  else if(view==='thanks') app.innerHTML=`<div class="hero">${bridge}<h2>이야기해 줘서 고마워</h2>
   <p>선생님이 네 마음을 잘 들었어. 혼자 고민하지 않아도 돼.</p><div><button class="btn" data-act="home">처음으로</button></div></div>`;
  else if(view==='pin') app.innerHTML=pinHTML();
- else if(view==='teacher') app.innerHTML=authed?teacherHTML():pinHTML();
- else if(view==='card') app.innerHTML=cardHTML();
+ else if(view==='teacher') app.innerHTML=authed?(isT()?teacherHTML():loginHTML()):pinHTML();
+ else if(view==='card') app.innerHTML=isT()?cardHTML():loginHTML();
 }
 
 function startFlow(steps,who){flow={steps,i:0,d:{},who};view='flow';render();scrollTo(0,0)}
@@ -182,7 +215,7 @@ function flowHTML(){
  else body=`<div class="grid${st.face?' face':''}">${st.o.map((o,j)=>{const on=st.t==='one'?v===o:(v||[]).includes(o);return `<button class="chip${st.face?' big':''}" data-act="chip" data-j="${j}" aria-pressed="${on}">${chipLbl(o)}</button>`}).join('')}</div>`+(st.max?`<p class="mut">최대 ${st.max}개까지 고를 수 있어.</p>`:'')+(st.w?`<label class="wl" for="w">✏️ 직접 쓰기 <span class="mut">(안 써도 돼)</span></label><textarea id="w" class="w" placeholder="${esc(st.w)}">${esc(flow.d[st.k+'_t']||'')}</textarea>`:'');
  return `${dots}<h2>${esc(st.q)}</h2>${st.sub?`<p class="mut">${esc(st.sub)}</p>`:''}${body}
  <div class="nav"><button class="btn ghost sm" data-act="${flow.i?'prev':'quit'}">${flow.i?'이전':'그만하기'}</button>
- <button class="btn" data-act="next" ${valid(st)?'':'disabled'}>${last?(flow.who==='g'?'선생님께 보내기':'약속 카드 만들기'):'다음'}</button></div>`;
+ <button class="btn" data-act="next" ${valid(st)&&!sending?'':'disabled'}>${last?(flow.who==='g'?(sending?'보내는 중…':'선생님께 보내기'):'약속 카드 만들기'):'다음'}</button></div>`;
 }
 
 function counts(k,opts){const c=opts.map(o=>[o,S.stories.filter(s=>(Array.isArray(s[k])?s[k]:[s[k]]).includes(o)).length]);return c.filter(x=>x[1]>0)}
@@ -193,7 +226,8 @@ function bars(title,k,opts,pick){
 }
 function teacherHTML(){
  const n=S.stories.length,sh=shared().length;
- return `<div class="row2" style="justify-content:space-between"><h2>선생님 정리</h2><button class="btn ghost sm" data-act="home">처음 화면</button></div>
+ return `<div class="row2" style="justify-content:space-between"><h2>선생님 정리</h2><div class="row2"><button class="btn ghost sm" data-act="glogout">로그아웃</button><button class="btn ghost sm" data-act="home">처음 화면</button></div></div>
+ <p class="lock">● 실시간 연결됨 · 새 이야기가 오면 바로 나타나요</p>
  <details class="box" ${n?'':'open'}><summary class="jua">상담 진행 가이드</summary>
  <ol><li><b>여학생들과 따로 듣기</b> — 여럿이 함께 말하면 의견이 한쪽으로 쏠려요. 한 명씩 이 앱으로 이야기를 남기게 해 주세요.</li><li><b>행동과 영향을 나눠 보기</b> — "고집이 세다" 대신 "팀을 정할 때 먼저 정해 버려서 말하기 어려웠다"처럼요.</li><li><b>남학생 이야기 먼저 듣기</b> — 남학생 화면은 체육 시간에 좋은 점과 답답한 점을 먼저 묻고 시작해요.</li><li><b>작은 약속 정하고 다시 확인하기</b> — 며칠 뒤 각자 따로 물어봐 주세요.</li></ol>
  <div class="say good">처음 꺼내는 말: "누가 잘못했는지 정하려는 자리가 아니야. 체육 시간에 서로 편하게 참여하려면 무엇을 바꾸면 좋을지 함께 알아보자."</div>
@@ -205,7 +239,7 @@ function teacherHTML(){
  ${bars('친구에게 바라는 것','wish',WISH,1)}${bars('여학생들이 스스로 해 볼 것','mine',MINE)}${bars('친구의 좋은 점','good',GOOD)}
  <div class="box"><h3>친구별 기록</h3>${n?S.stories.map((s,i)=>`<details><summary>${esc(s.ani)} · ${s.share===SHARE[0]?'전달 동의':'선생님만'} · ${new Date(s.at).toLocaleDateString('ko-KR')}</summary>
   ${G.filter(st=>st.w).map(st=>{const c=s[st.k]||[],t=(s[st.k+'_t']||'').trim();return (c.length||t)?`<p style="margin-top:10px"><b>${esc(st.q)}</b></p>${c.length?`<p>${c.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</p>`:''}${t?`<div class="say">✏️ ${esc(t)}</div>`:''}`:''}).join('')}<p style="margin-top:10px"><b>더 하고 싶은 말</b></p>${s.text?`<div class="say">${esc(s.text)}</div>`:'<p class="mut">따로 쓴 말 없음</p>'}
-  <button class="btn ghost sm" data-act="del" data-i="${i}">이 기록 지우기</button></details>`).join(''):'<p class="mut">아직 없어요.</p>'}
+  <button class="btn ghost sm" data-act="del" data-i="${esc(s.id)}">이 기록 지우기</button></details>`).join(''):'<p class="mut">아직 없어요.</p>'}
   <p class="lock">직접 쓴 말(✏️)은 남학생 화면에 나오지 않아요. 필요하면 선생님 말로 바꿔 전해 주세요.</p></div>
  <div class="box"><h3>남학생과 대화하기 전에</h3><p class="mut">남학생 화면에는 몇 명이 말했는지 숫자가 나오지 않고, 좋은 점부터 보여 줘요.</p>
   <textarea id="note" placeholder="선생님의 한마디 (예: 너와 친구들이 체육 시간을 더 즐겁게 보냈으면 해서 이야기를 나누려고 해)">${esc(S.note)}</textarea>
@@ -244,19 +278,21 @@ app.addEventListener('click',e=>{
  else if(a==='next'){
   if(flow.i<flow.steps.length-1){flow.i++;render();scrollTo(0,0);return}
   const d={...flow.d,at:new Date().toISOString()};
-  if(flow.who==='g'){S.stories.push(d);save();flow=null;authed=false;go('thanks')}else{S.boy=d;save();flow=null;go('card')}}
+  if(flow.who==='g'){sendStory(d)}else{S.boy=d;setState({boy:clean(d)});flow=null;go('card')}}
  else if(a==='teacher')go('teacher');
  else if(a==='pk')pinKey(b.dataset.k);
  else if(a==='sum'){const sh=shared(),f=(k,x)=>{const a=union(k,sh);return a.length?a.map(y=>'- '+y).join('\n'):'- (더 확인해 보기)'};
   const txt=`친구 관계 대화 요약 (이름·발언자 없이 정리)\n\n[자주 나온 상황]\n${f('when')}\n\n[힘들었던 일]\n${f('what')}\n\n[친구들이 바라는 것]\n${f('wish')}\n\n[친구들이 스스로 해 볼 것]\n${f('mine').replace('- 아직 잘 모르겠어\n','')}\n\n[친구의 좋은 점]\n${f('good')}\n\n※ 전달에 동의한 이야기만 모았어요. 직접 쓴 글은 빠져 있어요.`;
   try{navigator.clipboard.writeText(txt).then(()=>toast('요약을 복사했어요'),()=>toast('복사가 막혀 있어요'))}catch(err){toast('복사가 막혀 있어요')}}
  else if(a==='card')go('card');
- else if(a==='del'){S.stories.splice(+b.dataset.i,1);save();render()}
+ else if(a==='del'){if(isT())fb.db.ref('stories/'+b.dataset.i).remove()}
+ else if(a==='glogin'){const pr=new firebase.auth.GoogleAuthProvider();pr.setCustomParameters({login_hint:T_EMAIL,prompt:'select_account'});fb.auth.signInWithPopup(pr).catch(e=>{if(e&&(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment'))fb.auth.signInWithRedirect(pr);else toast('로그인하지 못했어요')})}
+ else if(a==='glogout'){fb.auth.signOut();go('home')}
  else if(a==='sample'){const t=new Date().toISOString();S.stories=[
   {ani:ANI[0],when:[WHEN[0],WHEN[1]],what:[WHAT[0],WHAT[3]],feel:[FEEL[2]],wish:[WISH[0],WISH[3]],mine:[MINE[1]],good:[GOOD[0],GOOD[1]],text:'',share:SHARE[0],at:t},
   {ani:ANI[3],when:[WHEN[2]],what:[WHAT[1],WHAT[2]],feel:[FEEL[0],FEEL[4]],wish:[WISH[2],WISH[1]],mine:[MINE[2]],good:[GOOD[2]],text:'공 놓쳤을 때 소리 질러서 그 뒤로 체육이 싫어졌어요',share:SHARE[0],at:t},
-  {ani:ANI[5],when:[WHEN[3]],what:[WHAT[5]],feel:[FEEL[1]],wish:[WISH[5]],mine:[MINE[4]],good:[GOOD[6]],text:'',share:SHARE[1],at:t}];S.picked=false;save();render()}
- else if(a==='wipe'){if(!wipeArm){wipeArm=true;render();return}S={stories:[],note:'',picked:false,pick:{what:[],wish:[]},boy:null};wipeArm=false;save();render();toast('모두 지웠어요')}
+  {ani:ANI[5],when:[WHEN[3]],what:[WHAT[5]],feel:[FEEL[1]],wish:[WISH[5]],mine:[MINE[4]],good:[GOOD[6]],text:'',share:SHARE[1],at:t}];S.stories.forEach(x=>{x.uid=user.uid;fb.db.ref('stories').push(clean(x))});S.stories=[];setState({picked:false})}
+ else if(a==='wipe'){if(!wipeArm){wipeArm=true;render();return}wipeArm=false;if(isT()){fb.db.ref('stories').remove();fb.db.ref('teacher').remove()}render();toast('모두 지웠어요')}
  else if(a==='copy'){const c=cardText(),f=x=>x.length?x.map(y=>'- '+y).join('\n'):'- (함께 정하기)';
   const txt=`우리의 약속 카드 (${c.date})\n\n[내가 해 볼 약속]\n${f(c.prom)}\n\n[내가 친구들에게 바라는 것]\n${f(c.bw)}\n\n[친구들이 해 볼 것]\n${f(c.mine)}`;
   try{navigator.clipboard.writeText(txt).then(()=>toast('복사했어요'),()=>toast('복사가 막혀 있어요'))}catch(err){toast('복사가 막혀 있어요')}}
@@ -264,13 +300,13 @@ app.addEventListener('click',e=>{
 app.addEventListener('input',e=>{
  if(e.target.id==='tx'&&flow)flow.d.text=e.target.value;
  if(e.target.id==='w'&&flow){const st=flow.steps[flow.i];flow.d[st.k+'_t']=e.target.value;const nb=app.querySelector('[data-act=next]');if(nb)nb.disabled=!valid(st)}
- if(e.target.id==='note'){S.note=e.target.value;save()}
- if(e.target.id==='follow'){S.follow=e.target.value;save()}
+ if(e.target.id==='note'){S.note=e.target.value;debState({note:S.note})}
+ if(e.target.id==='follow'){S.follow=e.target.value;debState({follow:S.follow})}
 });
 app.addEventListener('change',e=>{
  const k=e.target.dataset.pick;if(!k)return;
  if(!S.picked){S.pick={what:pickOf('what'),wish:pickOf('wish')};S.picked=true}
- const v=e.target.value;S.pick[k]=e.target.checked?[...new Set([...S.pick[k],v])]:S.pick[k].filter(x=>x!==v);save();
+ const v=e.target.value;S.pick[k]=e.target.checked?[...new Set([...S.pick[k],v])]:S.pick[k].filter(x=>x!==v);setState({picked:true,pick:clean(S.pick)});
 });
 render();
 }
