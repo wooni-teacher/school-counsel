@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>마음 다리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+/* VOICE: 다정하고 조용하게 — 아이가 겁먹지 않는 말투, 선생님 화면은 차분한 정리
+   IDEA: 두 언덕을 잇는 다리 — 여학생들의 마음과 남학생의 마음이 선생님을 통해 오가는 길
+   PICTURE: 첫 화면의 다리 그림, 진행 중에는 크게 누르는 카드 자체가 그림
+   COLOUR and TYPE: 노을빛 살구 바탕, 산호색 강조, 짙은 청록 보조 / Jua 제목 + Gowun Dodum 본문
+   LAYOUT: 한 열, 큰 탭 버튼, 태블릿 기준 폭 760px */
+:root{color-scheme:light dark;--bg:light-dark(#fff4e8,#1c191f);--ink:light-dark(#2d2522,#f3ece6);--soft:light-dark(#ffe3c9,#2d2730);--card:light-dark(#fff,#262229);--line:light-dark(#f0d6bf,#3b3440);--pri:light-dark(#e2553d,#ff7d64);--sup:light-dark(#1f5f6b,#80c7d1);--mut:light-dark(#7b6a61,#b5aaa2)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 "Gowun Dodum",system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3,.jua{font-family:Jua,"Gowun Dodum",sans-serif;font-weight:400;line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(36px,7vw,52px)}h2{font-size:clamp(26px,4.6vw,34px)}h3{font-size:20px}
+.wrap{max-width:760px;margin:0 auto;padding:clamp(20px,4vw,40px) max(4vw,16px) 60px}
+.hero{background:var(--soft);border-radius:28px;padding:24px;display:grid;gap:14px}
+.hero svg{width:100%;height:auto;display:block}
+p{margin:.4em 0}.mut{color:var(--mut);font-size:15px}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{min-height:56px;border:0;border-radius:18px;padding:12px 24px;font-family:Jua,sans-serif;font-size:21px;background:var(--pri);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.btn.sup{background:var(--sup);color:light-dark(#fff,#13262a)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.sm{min-height:44px;font-size:17px;padding:8px 16px}
+:focus-visible{outline:3px solid var(--sup);outline-offset:3px}
+.row2{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.hold{position:relative;overflow:hidden;min-height:44px;border:2px dashed var(--line);background:none;border-radius:14px;padding:6px 16px;color:var(--mut);font-size:15px;touch-action:none;user-select:none;-webkit-user-select:none}
+.hold i{position:absolute;inset:0;width:0;background:var(--soft);z-index:-1;transition:width 0s}
+.hold.on i{width:100%;transition:width 1.4s linear}
+.dots{display:flex;gap:6px;margin:4px 0 18px}.dots i{height:8px;flex:1;border-radius:4px;background:var(--line)}.dots i.on{background:var(--pri)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr));gap:12px;margin:22px 0}
+.grid.face{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+.chip{min-height:72px;border:2px solid var(--line);background:var(--card);border-radius:20px;padding:12px 16px;text-align:left;font-size:19px;line-height:1.35;transition:transform .12s}
+.chip.big{text-align:center;font-size:20px}.chip.big b{display:block;font-size:40px;line-height:1.2;font-weight:400}
+.chip[aria-pressed=true]{background:var(--pri);border-color:var(--pri);color:#fff}
+.chip:active{transform:scale(.97)}
+textarea{width:100%;min-height:130px;font:inherit;font-size:18px;padding:14px;border-radius:18px;border:2px solid var(--line);background:var(--card);color:var(--ink);margin:18px 0}
+.wl{display:block;font-family:Jua,sans-serif;font-size:19px;margin-top:6px}textarea.w{min-height:96px;margin-top:8px}
+.nav{display:flex;justify-content:space-between;gap:12px;margin-top:10px}
+.say{background:var(--card);border:2px solid var(--line);border-radius:22px 22px 22px 6px;padding:14px 18px;font-size:19px;margin:10px 0}
+.tag{display:inline-block;background:var(--soft);border-radius:999px;padding:4px 14px;margin:4px 6px 4px 0;font-size:16px}
+.good{background:light-dark(#e3f1f3,#1f3236);border-color:transparent}
+.box{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px 20px;margin:16px 0}
+.stat{display:flex;gap:28px;flex-wrap:wrap}.stat b{font-family:Jua;font-size:40px;display:block;line-height:1}
+.br{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 2em;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line);font-size:16px}
+.br:first-of-type{border-top:0}.br label{display:flex;gap:8px;align-items:center}
+.br input{width:22px;height:22px;accent-color:var(--pri);flex:none}
+.bar{height:12px;background:var(--soft);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--sup);border-radius:6px}
+.br b{text-align:right;font-variant-numeric:tabular-nums}
+details{border-top:1px solid var(--line);padding:10px 0}summary{cursor:pointer;font-size:17px;min-height:32px}
+.lock{font-size:14px;color:var(--mut)}
+.pcard{background:var(--card);border:3px solid var(--pri);border-radius:28px;padding:26px;display:grid;gap:18px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px}
+.cols>div{background:var(--soft);border-radius:18px;padding:16px}
+ul{margin:.4em 0;padding-left:1.2em}li{margin:.25em 0}
+.pinw{max-width:420px;margin:0 auto;text-align:center}.pdots{display:flex;gap:14px;justify-content:center;margin:18px 0 22px}.pdots i{width:18px;height:18px;border-radius:50%;border:2px solid var(--pri)}.pdots i.on{background:var(--pri)}
+.pad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.pad .chip{min-height:72px;font-size:26px;font-family:Jua,sans-serif}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:14px;font-size:16px}
+@media(prefers-reduced-motion:reduce){.hold.on i{transition:none}.chip{transition:none}}
+@media(max-width:600px){.br{grid-template-columns:minmax(0,1fr) 70px 2em}}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+<script>
+{
+const ANI=['🐰 토끼','🐱 고양이','🐻 곰','🦊 여우','🐼 판다','🐧 펭귄','🐢 거북이','🐿️ 다람쥐','🦎 도마뱀'];
+const WHEN=['체육 시간에 팀을 나눌 때','경기 작전을 정할 때','경기하다 내가 실수했을 때','우리 팀이 지고 있을 때','모둠 활동을 할 때','쉬는 시간에'];
+const WHAT=['내가 말하기 전에 다 정해졌어','목소리가 커서 무서웠어','실수했을 때 들은 말이 속상했어','내 말을 끝까지 못 했어','시키는 대로만 해야 했어','표정이나 한숨 때문에 눈치가 보였어'];
+const WHAT_B=['친구가 말하기 전에 다 정해졌대','목소리가 커서 무서웠대','실수했을 때 들은 말이 속상했대','하고 싶은 말을 끝까지 못 했대','시키는 대로만 해야 했대','표정이나 한숨 때문에 눈치가 보였대'];
+const FEEL=['😨 무서웠어','😢 속상했어','😣 답답했어','😠 화가 났어','😶 말이 안 나왔어','🙂 조금 괜찮았어'];
+const WISH=['내 의견도 물어봐 줘','목소리를 조금 낮춰 줘','실수해도 괜찮다고 해 줘','다 같이 정하자','내 말을 끝까지 들어 줘','져도 화내지 말아 줘'];
+const MINE=['내 생각을 짧게라도 말해 볼래','"잠깐, 나도 의견 있어"라고 말해 볼래','힘들면 선생님께 말할래','친구가 잘하면 칭찬해 볼래','아직 잘 모르겠어'];
+const GOOD=['운동을 잘해','열심히 해','이기고 싶은 마음이 커','앞장서서 이끌어','같이 있으면 재미있을 때가 있어','나를 도와준 적이 있어','잘 모르겠어'];
+const SHARE=['이름은 빼고 친구에게 전해 줘','선생님만 알고 있어 줘'];
+const B_FEEL=['😮 몰랐어','😳 깜짝 놀랐어','😔 미안해','😕 조금 억울해','🤔 생각해 볼게'];
+const B_WHY=['이기고 싶어서 그랬어','빨리 정해야 할 것 같았어','친구들이 말을 안 해서 내가 정했어','그렇게 무서운 줄 몰랐어','장난이었는데 오해가 생겼어','잘 모르겠어'];
+const B_PROM=['정하기 전에 "너는 어때?" 물어볼게','목소리를 조금 낮춰 볼게','친구가 실수해도 "괜찮아"라고 할게','다 같이 정할게','친구 말을 끝까지 들을게','져도 화내지 않을게'];
+const B_WISH=['의견이 있으면 바로 말해 줘','"같이 정하자"고 말해 줘','내가 세게 말하면 그때 알려 줘','같이 열심히 해 줘','내 좋은 점도 봐 줘'];
+
+const G=[
+ {k:'ani',q:'오늘 나는 어떤 동물로 할까?',sub:'이름 대신 쓸 동물을 하나 골라 줘.',t:'one',o:ANI,face:1},
+ {k:'when',q:'언제 마음이 힘들었어?',sub:'여러 개 골라도 되고, 직접 써도 돼.',t:'multi',o:WHEN,w:'예: 피구할 때 공을 누가 던질지 정할 때'},
+ {k:'what',q:'그때 어떤 일이 있었어?',sub:'생각나는 걸 고르거나 직접 써 줘.',t:'multi',o:WHAT,w:'그때 있었던 일을 내 말로 써 봐'},
+ {k:'feel',q:'그때 내 마음은 어땠어?',t:'multi',o:FEEL,face:1,w:'내 마음을 내 말로 써 봐'},
+ {k:'wish',q:'친구가 이렇게 해 주면 좋겠어',t:'multi',o:WISH,w:'친구에게 바라는 걸 써 봐'},
+ {k:'mine',q:'나도 해 볼 수 있는 게 있을까?',sub:'아주 작은 것도 좋아.',t:'multi',o:MINE,w:'내가 해 볼 수 있는 걸 써 봐'},
+ {k:'good',q:'이 친구의 좋은 점도 있을까?',sub:'좋은 점을 함께 전하면 친구가 이야기를 더 잘 들을 수 있어.',t:'multi',o:GOOD,w:'친구의 좋은 점을 써 봐'},
+ {k:'text',q:'더 하고 싶은 말이 있으면 써 줘',sub:'안 써도 괜찮아. 이 말은 선생님만 봐.',t:'text'},
+ {k:'share',q:'선생님이 이 이야기를 친구에게 전해도 될까?',sub:'어떤 걸 골라도 괜찮아.',t:'one',o:SHARE}
+];
+const B=[
+ {t:'read',q:'먼저 네 이야기를 듣고 싶어',h:()=>`<div class="say good">누가 잘못했는지 정하려는 자리가 아니야. 체육 시간에 모두 편하게 참여하려면 무엇을 바꾸면 좋을지 같이 알아보자.</div>`+(S.note?`<div class="say good">선생님: ${esc(S.note)}</div>`:'')},
+ {k:'pe_good',q:'체육 시간에 너는 어떤 점이 좋아?',t:'multi',o:['친구들과 같이 뛰는 게 좋아','이기는 게 좋아','작전 짜는 게 좋아','몸을 움직이는 게 좋아','잘 모르겠어'],w:'체육 시간에 좋은 점을 써 봐'},
+ {k:'pe_hard',q:'체육 시간에 답답했던 적이 있어?',t:'multi',o:['친구들이 의견을 말하지 않을 때','열심히 안 하는 것 같을 때','규칙을 안 지킬 때','우리 팀이 지고 있을 때','별로 없어'],w:'답답했던 일을 써 봐'},
+ {t:'read',q:'친구들이 말한 너의 좋은 점',h:()=>readGood()},
+ {t:'read',q:'그런데 친구들은 이럴 때 마음이 힘들었대',h:()=>readHard()},
+ {t:'read',q:'친구들이 이렇게 해 주면 좋겠대',h:()=>readWish()},
+ {k:'feel',q:'이 이야기를 들으니 내 마음은?',t:'multi',o:B_FEEL,face:1,w:'내 마음을 내 말로 써 봐'},
+ {k:'why',q:'그때 나는 사실…',sub:'네 마음도 선생님이 듣고 싶어.',t:'multi',o:B_WHY,w:'그때 내 마음이나 이유를 써 봐'},
+ {k:'prom',q:'내가 해 볼 약속을 골라 줘',sub:'한두 개만 골라도 충분해.',t:'multi',o:B_PROM,max:2,w:'내가 만든 약속을 써 봐'},
+ {k:'wish',q:'나도 친구들에게 바라는 게 있어',t:'multi',o:B_WISH,w:'친구들에게 바라는 걸 써 봐'}
+];
+
+const KEY='maeum-dari-v1';
+let S={stories:[],note:'',picked:false,pick:{what:[],wish:[]},boy:null};
+try{const v=JSON.parse(localStorage.getItem(KEY)||'null');if(v)S=Object.assign(S,v)}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const app=document.getElementById('app');
+let view='home',flow=null,wipeArm=false,authed=false,pin='',pinErr='';
+const PIN_H='f3f33df5ea32a7a235f37929cb9f5e75da028da141c86ea293016bd8c9be1bca';
+async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+function pinHTML(){return `<div class="pinw"><h2>선생님 비밀번호</h2><p class="mut">${pinErr?esc(pinErr):'6자리 숫자를 눌러 주세요.'}</p>
+ <div class="pdots">${[0,1,2,3,4,5].map(i=>`<i class="${i<pin.length?'on':''}"></i>`).join('')}</div>
+ <div class="pad">${['1','2','3','4','5','6','7','8','9','지우기','0','취소'].map(k=>`<button class="chip big" data-act="pk" data-k="${k}">${k}</button>`).join('')}</div></div>`}
+async function pinKey(k){if(k==='취소'){pin='';pinErr='';go('home');return}if(k==='지우기'){pin=pin.slice(0,-1);render();return}if(pin.length>=6)return;pin+=k;pinErr='';render();
+ if(pin.length===6){let ok=false;try{ok=(await sha(pin))===PIN_H}catch(e){pinErr='이 브라우저에서는 비밀번호 확인이 안 돼요.'}pin='';if(ok){authed=true;go('teacher')}else{if(!pinErr)pinErr='비밀번호가 달라요. 다시 눌러 주세요.';render()}}}
+
+const shared=()=>S.stories.filter(s=>s.share===SHARE[0]);
+const union=(k,list)=>{const set=new Set();list.forEach(s=>(s[k]||[]).forEach(x=>set.add(x)));return [...set]};
+const pickOf=k=>S.picked?S.pick[k]:union(k,shared());
+const chipLbl=o=>{const m=o.match(/^(\S+)\s(.+)$/);return m&&/\p{Extended_Pictographic}/u.test(m[1])?`<b>${m[1]}</b>${esc(m[2])}`:esc(o)};
+
+function readGood(){
+ const g=union('good',shared()).filter(x=>x!=='잘 모르겠어');
+ return (g.length?g.map(x=>`<div class="say good">${esc(x)}</div>`).join(''):'<p class="mut">선생님이 직접 좋은 점을 이야기해 줄게.</p>');
+}
+function readHard(){
+ const intro='<div class="say good">네가 팀을 잘 꾸리거나 빨리 시작하려고 그랬을 수도 있어. 그런데 친구들은 이럴 때 긴장되거나 말하기 어려웠대.</div>';
+ const w=union('when',shared()),h=pickOf('what').map(x=>WHAT_B[WHAT.indexOf(x)]).filter(Boolean);
+ return intro+(w.length?`<p>${w.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</p>`:'')+
+  (h.length?h.map(x=>`<div class="say">${esc(x)}</div>`).join(''):'<p class="mut">선생님이 직접 이야기해 줄게.</p>');
+}
+function readWish(){
+ const w=pickOf('wish');
+ return w.length?w.map(x=>`<div class="say">“${esc(x)}”</div>`).join(''):'<p class="mut">선생님이 직접 이야기해 줄게.</p>';
+}
+
+const bridge=`<svg viewBox="0 0 600 230" role="img" aria-label="두 언덕을 잇는 다리 위에서 마주 보는 두 아이">
+<defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd2ad"/><stop offset="1" stop-color="#fff0e0"/></linearGradient></defs>
+<rect width="600" height="230" rx="22" fill="url(#sk)"/><circle cx="470" cy="62" r="30" fill="#ffb27d"/>
+<path d="M0 230V150Q90 110 190 140L190 230Z" fill="#f08a6b"/><path d="M0 230V170Q90 140 190 160L190 230Z" fill="#d9674d"/>
+<path d="M600 230V150Q510 110 410 140L410 230Z" fill="#3f8692"/><path d="M600 230V170Q510 140 410 160L410 230Z" fill="#1f5f6b"/>
+<path d="M190 205Q300 185 410 205V230H190Z" fill="#8cc9d1"/><path d="M215 215q20-6 40 0M330 212q20-6 40 0" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".7"/>
+<path d="M170 142Q300 70 430 142" stroke="#7a4a3a" stroke-width="12" fill="none" stroke-linecap="round"/>
+<path d="M170 142Q300 98 430 142" stroke="#a8644c" stroke-width="7" fill="none"/>
+<g stroke="#7a4a3a" stroke-width="4">${[215,255,300,345,385].map(x=>`<line x1="${x}" y1="${x===300?86:x<300?96+(255-x)/4:96+(x-345)/4}" x2="${x}" y2="${x===300?120:126}"/>`).join('')}</g>
+<g><circle cx="238" cy="80" r="11" fill="#5a3a30"/><rect x="226" y="92" width="24" height="26" rx="11" fill="#e2553d"/></g>
+<g><circle cx="362" cy="80" r="11" fill="#5a3a30"/><rect x="350" y="92" width="24" height="26" rx="11" fill="#1f5f6b"/></g>
+<path d="M300 66c-6-9-20-4-14 7l14 12 14-12c6-11-8-16-14-7z" fill="#e2553d"/>
+</svg>`;
+
+function render(){
+ if(view==='home') app.innerHTML=`<div class="hero">${bridge}
+  <h1>마음 다리</h1><p>말하기 어려웠던 마음을 선생님께 살짝 전해 줘. 누르기만 하면 돼.</p>
+  <div class="row2"><button class="btn" data-act="girl">내 이야기 들려주기</button>
+  <button class="hold" data-act="teacher">선생님 화면</button></div></div>
+  <p class="mut" style="margin-top:14px">고른 내용은 이 기기 안에만 저장돼요.</p>`;
+ else if(view==='flow') app.innerHTML=flowHTML();
+ else if(view==='thanks') app.innerHTML=`<div class="hero">${bridge}<h2>이야기해 줘서 고마워</h2>
+  <p>선생님이 네 마음을 잘 들었어. 혼자 고민하지 않아도 돼.</p><div><button class="btn" data-act="home">처음으로</button></div></div>`;
+ else if(view==='pin') app.innerHTML=pinHTML();
+ else if(view==='teacher') app.innerHTML=authed?teacherHTML():pinHTML();
+ else if(view==='card') app.innerHTML=cardHTML();
+}
+
+function startFlow(steps,who){flow={steps,i:0,d:{},who};view='flow';render();scrollTo(0,0)}
+function valid(st){if(st.t==='read'||st.t==='text')return true;const v=flow.d[st.k];if(st.w&&(flow.d[st.k+'_t']||'').trim())return true;return Array.isArray(v)?v.length>0:!!v}
+function flowHTML(){
+ const st=flow.steps[flow.i],n=flow.steps.length,last=flow.i===n-1,v=flow.d[st.k];
+ const dots=`<div class="dots" aria-label="${flow.i+1} / ${n}">${flow.steps.map((_,j)=>`<i class="${j<=flow.i?'on':''}"></i>`).join('')}</div>`;
+ let body='';
+ if(st.t==='read') body=`<div style="margin:20px 0">${st.h()}</div>`;
+ else if(st.t==='text') body=`<textarea id="tx" placeholder="여기에 써도 되고, 비워 둬도 돼">${esc(v||'')}</textarea>`;
+ else body=`<div class="grid${st.face?' face':''}">${st.o.map((o,j)=>{const on=st.t==='one'?v===o:(v||[]).includes(o);return `<button class="chip${st.face?' big':''}" data-act="chip" data-j="${j}" aria-pressed="${on}">${chipLbl(o)}</button>`}).join('')}</div>`+(st.max?`<p class="mut">최대 ${st.max}개까지 고를 수 있어.</p>`:'')+(st.w?`<label class="wl" for="w">✏️ 직접 쓰기 <span class="mut">(안 써도 돼)</span></label><textarea id="w" class="w" placeholder="${esc(st.w)}">${esc(flow.d[st.k+'_t']||'')}</textarea>`:'');
+ return `${dots}<h2>${esc(st.q)}</h2>${st.sub?`<p class="mut">${esc(st.sub)}</p>`:''}${body}
+ <div class="nav"><button class="btn ghost sm" data-act="${flow.i?'prev':'quit'}">${flow.i?'이전':'그만하기'}</button>
+ <button class="btn" data-act="next" ${valid(st)?'':'disabled'}>${last?(flow.who==='g'?'선생님께 보내기':'약속 카드 만들기'):'다음'}</button></div>`;
+}
+
+function counts(k,opts){const c=opts.map(o=>[o,S.stories.filter(s=>(Array.isArray(s[k])?s[k]:[s[k]]).includes(o)).length]);return c.filter(x=>x[1]>0)}
+function bars(title,k,opts,pick){
+ const c=counts(k,opts),max=Math.max(1,...c.map(x=>x[1])),sh=union(k,shared()),pk=pick?pickOf(k):[];
+ return `<div class="box"><h3>${title}</h3>${pick?'<p class="lock">체크한 내용만 남학생 화면에 보여요. 선생님만 알고 있기로 한 내용은 고를 수 없어요.</p>':''}
+ ${c.length?c.map(([o,n])=>`<div class="br"><label>${pick?`<input type="checkbox" data-pick="${k}" value="${esc(o)}" ${pk.includes(o)?'checked':''} ${sh.includes(o)?'':'disabled'}>`:''}<span>${esc(o)}</span></label><div class="bar"><i style="width:${n/max*100}%"></i></div><b>${n}</b></div>`).join(''):'<p class="mut">아직 없어요.</p>'}</div>`;
+}
+function teacherHTML(){
+ const n=S.stories.length,sh=shared().length;
+ return `<div class="row2" style="justify-content:space-between"><h2>선생님 정리</h2><button class="btn ghost sm" data-act="home">처음 화면</button></div>
+ <details class="box" ${n?'':'open'}><summary class="jua">상담 진행 가이드</summary>
+ <ol><li><b>여학생들과 따로 듣기</b> — 여럿이 함께 말하면 의견이 한쪽으로 쏠려요. 한 명씩 이 앱으로 이야기를 남기게 해 주세요.</li><li><b>행동과 영향을 나눠 보기</b> — "고집이 세다" 대신 "팀을 정할 때 먼저 정해 버려서 말하기 어려웠다"처럼요.</li><li><b>남학생 이야기 먼저 듣기</b> — 남학생 화면은 체육 시간에 좋은 점과 답답한 점을 먼저 묻고 시작해요.</li><li><b>작은 약속 정하고 다시 확인하기</b> — 며칠 뒤 각자 따로 물어봐 주세요.</li></ol>
+ <div class="say good">처음 꺼내는 말: "누가 잘못했는지 정하려는 자리가 아니야. 체육 시간에 서로 편하게 참여하려면 무엇을 바꾸면 좋을지 함께 알아보자."</div>
+ <h3 style="margin-top:12px">대화 전 확인</h3><ul><li>상담 목적과 비밀을 지키는 범위를 쉬운 말로 설명했나요?</li><li>"무섭다"가 어떤 행동·상황인지 구체적으로 물었나요?</li><li>"소심하다"는 평가 대신, 의견을 말하기 쉬운 환경인지 살펴봤나요?</li><li>여학생들이 함께 남학생을 마주하는 방식은 피했나요?</li></ul>
+ <div class="say" style="border-color:var(--pri)"><b>안전 관련 이야기가 나오면</b> 위협, 괴롭힘, 신체적 위험, 보복 걱정이 구체적으로 나오면 대화만으로 해결하려 하지 말고 학교의 보호 절차를 먼저 따라 주세요.</div></details>
+ <div class="box stat"><div><b>${n}</b>이야기</div><div><b>${sh}</b>전달 동의</div><div><b>${n-sh}</b>선생님만</div></div>
+ ${n?'':'<div class="box"><p>아직 들어온 이야기가 없어요. 화면이 어떻게 보이는지 먼저 확인하려면 예시를 넣어 보세요.</p><button class="btn sup sm" data-act="sample">예시 이야기 3개 넣기</button></div>'}
+ ${bars('언제 힘들었나','when',WHEN)}${bars('어떤 일이 있었나','what',WHAT,1)}${bars('그때 마음','feel',FEEL)}
+ ${bars('친구에게 바라는 것','wish',WISH,1)}${bars('여학생들이 스스로 해 볼 것','mine',MINE)}${bars('친구의 좋은 점','good',GOOD)}
+ <div class="box"><h3>친구별 기록</h3>${n?S.stories.map((s,i)=>`<details><summary>${esc(s.ani)} · ${s.share===SHARE[0]?'전달 동의':'선생님만'} · ${new Date(s.at).toLocaleDateString('ko-KR')}</summary>
+  ${G.filter(st=>st.w).map(st=>{const c=s[st.k]||[],t=(s[st.k+'_t']||'').trim();return (c.length||t)?`<p style="margin-top:10px"><b>${esc(st.q)}</b></p>${c.length?`<p>${c.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</p>`:''}${t?`<div class="say">✏️ ${esc(t)}</div>`:''}`:''}).join('')}<p style="margin-top:10px"><b>더 하고 싶은 말</b></p>${s.text?`<div class="say">${esc(s.text)}</div>`:'<p class="mut">따로 쓴 말 없음</p>'}
+  <button class="btn ghost sm" data-act="del" data-i="${i}">이 기록 지우기</button></details>`).join(''):'<p class="mut">아직 없어요.</p>'}
+  <p class="lock">직접 쓴 말(✏️)은 남학생 화면에 나오지 않아요. 필요하면 선생님 말로 바꿔 전해 주세요.</p></div>
+ <div class="box"><h3>남학생과 대화하기 전에</h3><p class="mut">남학생 화면에는 몇 명이 말했는지 숫자가 나오지 않고, 좋은 점부터 보여 줘요.</p>
+  <textarea id="note" placeholder="선생님의 한마디 (예: 너와 친구들이 체육 시간을 더 즐겁게 보냈으면 해서 이야기를 나누려고 해)">${esc(S.note)}</textarea>
+  <label class="wl" for="follow">다시 확인할 때</label><textarea id="follow" class="w" placeholder="예: 다음 주 체육 수업 뒤, 각자 따로 짧게 확인하기">${esc(S.follow||'')}</textarea>
+  <div class="row2"><button class="btn ghost sm" data-act="sum" ${sh?'':'disabled'}>중립 요약 복사</button><button class="btn sup" data-act="boy" ${sh?'':'disabled'}>남학생과 대화 시작</button>${S.boy?'<button class="btn ghost sm" data-act="card">지난 약속 카드 보기</button>':''}</div></div>
+ <div class="row2" style="margin-top:24px"><button class="btn ghost sm" data-act="wipe">${wipeArm?'정말 모두 지울까요? 한 번 더 누르세요':'모든 기록 지우기'}</button></div>`;
+}
+function cardText(){
+ const b=S.boy||{},m=union('mine',shared()).filter(x=>x!=='아직 잘 모르겠어');
+ const ad=(a,t)=>{t=(t||'').trim();return t?[...a,t]:a};
+ return {prom:ad(b.prom||[],b.prom_t),bw:ad(b.wish||[],b.wish_t),mine:m,feel:ad(b.feel||[],b.feel_t),why:ad(b.why||[],b.why_t),pg:ad(b.pe_good||[],b.pe_good_t),ph:ad(b.pe_hard||[],b.pe_hard_t),date:b.at?new Date(b.at).toLocaleDateString('ko-KR'):''};
+}
+function cardHTML(){
+ const c=cardText(),li=a=>a.length?`<ul>${a.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<p class="mut">선생님과 함께 정해요</p>';
+ return `<div class="pcard"><div><h2>우리의 약속 카드</h2><p class="mut">${esc(c.date)} · 체육 시간을 모두에게 즐겁게</p></div>
+ <div class="cols"><div><h3>내가 해 볼 약속</h3>${li(c.prom)}</div><div><h3>내가 친구들에게 바라는 것</h3>${li(c.bw)}</div><div><h3>친구들이 해 볼 것</h3>${li(c.mine)}</div></div>
+ <details><summary>선생님만 보기: 남학생의 마음과 이야기</summary><h3 style="margin-top:8px">체육 시간에 좋은 점</h3>${li(c.pg)}<h3>답답했던 점</h3>${li(c.ph)}<h3>이야기를 들은 마음</h3>${li(c.feel)}<h3>사실은…</h3>${li(c.why)}</details>
+ <p class="mut">${esc((S.follow||'').trim()||'일주일 뒤에 선생님과 다시 이야기 나눠요.')} 잘 지킨 점을 먼저 찾아봐요.</p></div>
+ <div class="row2" style="margin-top:18px"><button class="btn sup sm" data-act="copy">글로 복사하기</button><button class="btn ghost sm" data-act="teacher">선생님 정리로</button></div>`;
+}
+
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1800)}
+function go(v){if((v==='teacher'||v==='card')&&!authed)v='pin';if(v==='home')authed=false;view=v;render();scrollTo(0,0)}
+
+app.addEventListener('click',e=>{
+ const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act;
+ if(a!=='wipe')wipeArm=false;
+ if(a==='girl'){authed=false;startFlow(G,'g')}
+ else if(a==='boy')startFlow(B,'b');
+ else if(a==='home'||a==='quit'){const toT=a==='quit'&&flow&&flow.who==='b';flow=null;go(toT?'teacher':'home')}
+ else if(a==='chip'){const st=flow.steps[flow.i],o=st.o[+b.dataset.j];
+  if(st.t==='one')flow.d[st.k]=o;
+  else{let v=flow.d[st.k]||[];if(v.includes(o))v=v.filter(x=>x!==o);else{if(st.max&&v.length>=st.max){toast(`${st.max}개까지 고를 수 있어`);return}v=[...v,o]}flow.d[st.k]=v}
+  render()}
+ else if(a==='prev'){flow.i--;render();scrollTo(0,0)}
+ else if(a==='next'){
+  if(flow.i<flow.steps.length-1){flow.i++;render();scrollTo(0,0);return}
+  const d={...flow.d,at:new Date().toISOString()};
+  if(flow.who==='g'){S.stories.push(d);save();flow=null;authed=false;go('thanks')}else{S.boy=d;save();flow=null;go('card')}}
+ else if(a==='teacher')go('teacher');
+ else if(a==='pk')pinKey(b.dataset.k);
+ else if(a==='sum'){const sh=shared(),f=(k,x)=>{const a=union(k,sh);return a.length?a.map(y=>'- '+y).join('\n'):'- (더 확인해 보기)'};
+  const txt=`친구 관계 대화 요약 (이름·발언자 없이 정리)\n\n[자주 나온 상황]\n${f('when')}\n\n[힘들었던 일]\n${f('what')}\n\n[친구들이 바라는 것]\n${f('wish')}\n\n[친구들이 스스로 해 볼 것]\n${f('mine').replace('- 아직 잘 모르겠어\n','')}\n\n[친구의 좋은 점]\n${f('good')}\n\n※ 전달에 동의한 이야기만 모았어요. 직접 쓴 글은 빠져 있어요.`;
+  try{navigator.clipboard.writeText(txt).then(()=>toast('요약을 복사했어요'),()=>toast('복사가 막혀 있어요'))}catch(err){toast('복사가 막혀 있어요')}}
+ else if(a==='card')go('card');
+ else if(a==='del'){S.stories.splice(+b.dataset.i,1);save();render()}
+ else if(a==='sample'){const t=new Date().toISOString();S.stories=[
+  {ani:ANI[0],when:[WHEN[0],WHEN[1]],what:[WHAT[0],WHAT[3]],feel:[FEEL[2]],wish:[WISH[0],WISH[3]],mine:[MINE[1]],good:[GOOD[0],GOOD[1]],text:'',share:SHARE[0],at:t},
+  {ani:ANI[3],when:[WHEN[2]],what:[WHAT[1],WHAT[2]],feel:[FEEL[0],FEEL[4]],wish:[WISH[2],WISH[1]],mine:[MINE[2]],good:[GOOD[2]],text:'공 놓쳤을 때 소리 질러서 그 뒤로 체육이 싫어졌어요',share:SHARE[0],at:t},
+  {ani:ANI[5],when:[WHEN[3]],what:[WHAT[5]],feel:[FEEL[1]],wish:[WISH[5]],mine:[MINE[4]],good:[GOOD[6]],text:'',share:SHARE[1],at:t}];S.picked=false;save();render()}
+ else if(a==='wipe'){if(!wipeArm){wipeArm=true;render();return}S={stories:[],note:'',picked:false,pick:{what:[],wish:[]},boy:null};wipeArm=false;save();render();toast('모두 지웠어요')}
+ else if(a==='copy'){const c=cardText(),f=x=>x.length?x.map(y=>'- '+y).join('\n'):'- (함께 정하기)';
+  const txt=`우리의 약속 카드 (${c.date})\n\n[내가 해 볼 약속]\n${f(c.prom)}\n\n[내가 친구들에게 바라는 것]\n${f(c.bw)}\n\n[친구들이 해 볼 것]\n${f(c.mine)}`;
+  try{navigator.clipboard.writeText(txt).then(()=>toast('복사했어요'),()=>toast('복사가 막혀 있어요'))}catch(err){toast('복사가 막혀 있어요')}}
+});
+app.addEventListener('input',e=>{
+ if(e.target.id==='tx'&&flow)flow.d.text=e.target.value;
+ if(e.target.id==='w'&&flow){const st=flow.steps[flow.i];flow.d[st.k+'_t']=e.target.value;const nb=app.querySelector('[data-act=next]');if(nb)nb.disabled=!valid(st)}
+ if(e.target.id==='note'){S.note=e.target.value;save()}
+ if(e.target.id==='follow'){S.follow=e.target.value;save()}
+});
+app.addEventListener('change',e=>{
+ const k=e.target.dataset.pick;if(!k)return;
+ if(!S.picked){S.pick={what:pickOf('what'),wish:pickOf('wish')};S.picked=true}
+ const v=e.target.value;S.pick[k]=e.target.checked?[...new Set([...S.pick[k],v])]:S.pick[k].filter(x=>x!==v);save();
+});
+render();
+}
+</script>
+</body>
+</html>
