@@ -5,25 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>마음 다리</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&display=swap" rel="stylesheet">
 <style>
 /* VOICE: 다정하고 조용하게 — 아이가 겁먹지 않는 말투, 선생님 화면은 차분한 정리
    IDEA: 두 언덕을 잇는 다리 — 이야기를 들려준 친구들과 대화할 친구의 마음이 선생님을 통해 오가는 길
    PICTURE: 첫 화면의 다리 그림, 진행 중에는 크게 누르는 카드 자체가 그림
-   COLOUR and TYPE: 노을빛 살구 바탕, 산호색 강조, 짙은 청록 보조 / Jua 제목 + Gowun Dodum 본문
+   COLOUR and TYPE: 노을빛 살구 바탕, 산호색 강조, 짙은 청록 보조 / Gowun Batang 제목 + Gowun Dodum 본문 (국어 학습지 허브와 같은 글꼴)
    LAYOUT: 한 열, 큰 탭 버튼, 태블릿 기준 폭 760px */
 :root{color-scheme:light dark;--bg:light-dark(#fff4e8,#1c191f);--ink:light-dark(#2d2522,#f3ece6);--soft:light-dark(#ffe3c9,#2d2730);--card:light-dark(#fff,#262229);--line:light-dark(#f0d6bf,#3b3440);--pri:light-dark(#e2553d,#ff7d64);--sup:light-dark(#1f5f6b,#80c7d1);--mut:light-dark(#7b6a61,#b5aaa2)}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 "Gowun Dodum",system-ui,sans-serif;overflow-x:clip}
-h1,h2,h3,.jua{font-family:Jua,"Gowun Dodum",sans-serif;font-weight:400;line-height:1.15;text-wrap:balance;margin:0}
+h1,h2,h3,.jua{font-family:"Gowun Batang",serif;font-weight:700;line-height:1.15;text-wrap:balance;margin:0}
 h1{font-size:clamp(36px,7vw,52px)}h2{font-size:clamp(26px,4.6vw,34px)}h3{font-size:20px}
 .wrap{max-width:760px;margin:0 auto;padding:clamp(20px,4vw,40px) max(4vw,16px) 60px}
 .hero{background:var(--soft);border-radius:28px;padding:24px;display:grid;gap:14px}
 .hero svg{width:100%;height:auto;display:block}
 p{margin:.4em 0}.mut{color:var(--mut);font-size:15px}
 button{font:inherit;color:inherit;cursor:pointer}
-.btn{min-height:56px;border:0;border-radius:18px;padding:12px 24px;font-family:Jua,sans-serif;font-size:21px;background:var(--pri);color:#fff}
+.btn{min-height:56px;border:0;border-radius:18px;padding:12px 24px;font-family:"Gowun Batang",serif;font-weight:700;font-size:21px;background:var(--pri);color:#fff}
 .btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
 .btn.sup{background:var(--sup);color:light-dark(#fff,#13262a)}
 .btn:disabled{opacity:.35;cursor:not-allowed}
@@ -41,13 +41,13 @@ button{font:inherit;color:inherit;cursor:pointer}
 .chip[aria-pressed=true]{background:var(--pri);border-color:var(--pri);color:#fff}
 .chip:active{transform:scale(.97)}
 textarea{width:100%;min-height:130px;font:inherit;font-size:18px;padding:14px;border-radius:18px;border:2px solid var(--line);background:var(--card);color:var(--ink);margin:18px 0}
-.wl{display:block;font-family:Jua,sans-serif;font-size:19px;margin-top:6px}textarea.w{min-height:96px;margin-top:8px}
+.wl{display:block;font-family:"Gowun Batang",serif;font-weight:700;font-size:19px;margin-top:6px}textarea.w{min-height:96px;margin-top:8px}
 .nav{display:flex;justify-content:space-between;gap:12px;margin-top:10px}
 .say{background:var(--card);border:2px solid var(--line);border-radius:22px 22px 22px 6px;padding:14px 18px;font-size:19px;margin:10px 0}
 .tag{display:inline-block;background:var(--soft);border-radius:999px;padding:4px 14px;margin:4px 6px 4px 0;font-size:16px}
 .good{background:light-dark(#e3f1f3,#1f3236);border-color:transparent}
 .box{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px 20px;margin:16px 0}
-.stat{display:flex;gap:28px;flex-wrap:wrap}.stat b{font-family:Jua;font-size:40px;display:block;line-height:1}
+.stat{display:flex;gap:28px;flex-wrap:wrap}.stat b{font-family:"Gowun Batang",serif;font-weight:700;font-size:40px;display:block;line-height:1}
 .br{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 2em;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line);font-size:16px}
 .br:first-of-type{border-top:0}.br label{display:flex;gap:8px;align-items:center}
 .br input{width:22px;height:22px;accent-color:var(--pri);flex:none}
@@ -60,7 +60,7 @@ details{border-top:1px solid var(--line);padding:10px 0}summary{cursor:pointer;f
 .cols>div{background:var(--soft);border-radius:18px;padding:16px}
 ul{margin:.4em 0;padding-left:1.2em}li{margin:.25em 0}
 .pinw{max-width:420px;margin:0 auto;text-align:center}.pdots{display:flex;gap:14px;justify-content:center;margin:18px 0 22px}.pdots i{width:18px;height:18px;border-radius:50%;border:2px solid var(--pri)}.pdots i.on{background:var(--pri)}
-.pad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.pad .chip{min-height:72px;font-size:26px;font-family:Jua,sans-serif}
+.pad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.pad .chip{min-height:72px;font-size:26px;font-family:"Gowun Batang",serif;font-weight:700}
 .cname{width:100%;max-width:320px;font:inherit;font-size:18px;padding:10px 14px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--ink);margin-top:6px}
 .imgw{position:fixed;inset:0;background:#000a;display:grid;place-items:center;padding:16px;z-index:9}.imgw>div{background:var(--card);border-radius:22px;padding:16px;max-width:520px;width:100%;max-height:100%;overflow:auto;display:grid;gap:12px}.imgw img{width:100%;border-radius:14px;display:block}
 .toast{z-index:10;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:14px;font-size:16px}
@@ -255,14 +255,14 @@ function cardText(){
  return {prom:ad(b.prom||[],b.prom_t),bw:ad(b.wish||[],b.wish_t),mine:m,feel:ad(b.feel||[],b.feel_t),why:ad(b.why||[],b.why_t),pg:ad(b.pe_good||[],b.pe_good_t),ph:ad(b.pe_hard||[],b.pe_hard_t),date:b.at?new Date(b.at).toLocaleDateString('ko-KR'):''};
 }
 async function makeCard(){
- const c=cardText(),h=hd(),W=1080,P=72,font='"Gowun Dodum",sans-serif',jua='Jua,"Gowun Dodum",sans-serif';
+ const c=cardText(),h=hd(),W=1080,P=72,font='"Gowun Dodum",sans-serif',jua='"Gowun Batang",serif';
  const secs=[{t:h.a,items:c.prom,col:'#e2553d',bg:'#ffe9e2'},{t:h.b,items:c.bw,col:'#1f5f6b',bg:'#e3f1f3'},{t:'친구들의 약속',items:c.mine,col:'#b8742a',bg:'#fff1d6'}];
  const follow=((S.follow||'').trim()||'일주일 뒤에 선생님과 다시 이야기 나눠요.');
  const all='우리의 약속 카드 잘 지킨 점을 먼저 찾아봐요 마음 다리 함께 정해요 선생님과 '+secs.map(x=>x.t+x.items.join('')).join('')+follow+c.date+'0123456789.·';
- try{await Promise.all([document.fonts.load('64px Jua',all),document.fonts.load('40px "Gowun Dodum"',all)])}catch(e){}
+ try{await Promise.all([document.fonts.load('bold 64px "Gowun Batang"',all),document.fonts.load('40px "Gowun Dodum"',all)])}catch(e){}
  const cv=document.createElement('canvas'),x=cv.getContext('2d');
  const wrap=(t,f,max)=>{x.font=f;const out=[];let line='';for(const ch of String(t)){const tl=line+ch;if(x.measureText(tl).width>max&&line){const sp=line.lastIndexOf(' ');if(sp>line.length*0.5&&ch!==' '){out.push(line.slice(0,sp));line=line.slice(sp+1)+ch}else{out.push(line);line=ch.trim()}}else line=tl}if(line)out.push(line);return out};
- const BF='40px '+font,HF='44px '+jua,LH=58,IW=W-P*2-56-40;
+ const BF='40px '+font,HF='bold 44px '+jua,LH=58,IW=W-P*2-56-40;
  const lay=secs.map(sc=>{const ht=wrap(sc.t,HF,W-P*2-56);const items=(sc.items.length?sc.items:['선생님과 함께 정해요']).map(it=>wrap(it,BF,IW));const n=items.reduce((a,b)=>a+b.length,0);return {...sc,ht,items,h:40+ht.length*56+16+n*LH+(items.length-1)*14+36}});
  const fl=wrap(follow+' 잘 지킨 점을 먼저 찾아봐요.',BF,W-P*2);
  const HEAD=430,H=HEAD+lay.reduce((a,b)=>a+b.h+28,0)+fl.length*LH+150;
@@ -275,7 +275,7 @@ async function makeCard(){
  x.fillStyle='#8cc9d1';x.fillRect(340,HEAD-70,W-680,70);
  x.strokeStyle='#7a4a3a';x.lineWidth=16;x.lineCap='round';x.beginPath();x.moveTo(320,312);x.quadraticCurveTo(W/2,190,W-320,312);x.stroke();
  const hx=W/2,hy=236;x.fillStyle='#e2553d';x.beginPath();x.moveTo(hx,hy+26);x.bezierCurveTo(hx-46,hy-6,hx-24,hy-44,hx,hy-18);x.bezierCurveTo(hx+24,hy-44,hx+46,hy-6,hx,hy+26);x.fill();
- x.fillStyle='#2d2522';x.textBaseline='top';x.font='76px '+jua;x.fillText('우리의 약속 카드',P,64);
+ x.fillStyle='#2d2522';x.textBaseline='top';x.font='bold 76px '+jua;x.fillText('우리의 약속 카드',P,64);
  x.font='36px '+font;x.fillStyle='#6b5a52';x.fillText(c.date+' · 마음 다리',P,160);
  let y=HEAD+30;
  const rr=(X,Y,w,h,r)=>{x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+w,Y,X+w,Y+h,r);x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.closePath()};
@@ -284,7 +284,7 @@ async function makeCard(){
   x.font=BF;sc.items.forEach(lines=>{x.fillStyle=sc.col;x.beginPath();x.arc(P+44,yy+24,9,0,7);x.fill();x.fillStyle='#2d2522';lines.forEach(l=>{x.fillText(l,P+76,yy);yy+=LH});yy+=14});
   y+=sc.h+28});
  x.fillStyle='#6b5a52';x.font=BF;fl.forEach(l=>{x.fillText(l,P,y+10);y+=LH});
- x.fillStyle='#e2553d';x.font='32px '+jua;x.fillText('♥ 마음 다리',P,H-80);
+ x.fillStyle='#e2553d';x.font='bold 32px '+jua;x.fillText('♥ 마음 다리',P,H-80);
  return new Promise(r=>cv.toBlob(r,'image/png'));
 }
 async function showCard(){
