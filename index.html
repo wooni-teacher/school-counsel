@@ -113,9 +113,109 @@ const B=[
  {k:'wish',q:'나도 친구들에게 바라는 게 있어',t:'multi',o:B_WISH,w:'친구들에게 바라는 걸 써 봐'}
 ];
 
+const NOW_F=['😊 편해졌어','🙂 조금 나아졌어','😐 비슷해','😟 아직 힘들어','😢 더 힘들어졌어'];
+const RATE=[[3,'⭐⭐⭐','잘 지켜'],[2,'⭐⭐','조금'],[1,'⭐','아직']];
+const CHG_F=['내 의견을 물어봐 줬어','목소리가 부드러워졌어','실수해도 괜찮다고 해 줬어','다 같이 정했어','내 말을 끝까지 들어 줬어','아직 잘 모르겠어'];
+const CHG_P=['친구들이 의견을 말해 줘','같이 정하니까 편해','친구들이 나를 칭찬해 줬어','체육 시간이 더 재밌어졌어','아직 잘 모르겠어'];
+const AGAIN=['괜찮아요','선생님과 한 번 더 이야기하고 싶어요'];
+let PUB=null,pubOn=false,curCid=null,caseArm='';
+const opts=st=>typeof st.o==='function'?st.o():(st.o||[]);
+const ymd=d=>{const z=new Date(d);z.setMinutes(z.getMinutes()-z.getTimezoneOffset());return z.toISOString().slice(0,10)};
+const plusDays=n=>{const d=new Date();d.setDate(d.getDate()+n);return ymd(d)};
+const dday=f=>{if(!f)return '';const t=new Date(ymd(new Date())),d=new Date(f),n=Math.round((d-t)/864e5);return n>0?`D-${n}`:n===0?'오늘':`${-n}일 지남`};
+const isDue=c=>c.status!=='done'&&c.followDate&&c.followDate<=ymd(new Date());
+function pubListen(){if(pubOn||!fb)return;pubOn=true;fb.db.ref('public/checkin').on('value',s=>{PUB=s.val();if(PUB){PUB.prom=arr(PUB.prom);PUB.mine=arr(PUB.mine)}if(view==='home')render()},()=>{pubOn=false})}
+const curProm=c=>{const r=rounds(c);return r.length?arr(r[r.length-1].next):arr(c.card&&c.card.prom)};
+const rounds=c=>Object.entries(c.rounds||{}).map(([id,r])=>({...r,id,partner:norm(r.partner),next:arr(r.next)})).sort((a,b)=>a.at<b.at?-1:1);
+const caseCk=cid=>Object.entries(S.checkins[cid]||{}).map(([id,r])=>({...r,id,rp:arr(r.rp),rm:arr(r.rm),chg:arr(r.chg),items_rp:arr(r.items_rp),items_rm:arr(r.items_rm)})).sort((a,b)=>a.at<b.at?-1:1);
+const CF=()=>[
+ {k:'ani',q:'오늘 나는 어떤 동물로 할까?',sub:'이름 대신 쓸 동물을 하나 골라 줘.',t:'one',o:ANI,face:1},
+ {k:'now',q:'요즘 그 친구와 함께할 때 내 마음은?',t:'one',o:NOW_F,face:1,w:'요즘 내 마음을 써 봐'},
+ {k:'rp',q:'친구가 약속을 잘 지키고 있어?',sub:'약속마다 별을 골라 줘.',t:'rate',items:()=>PUB.prom,w:'친구 약속에 대해 더 하고 싶은 말'},
+ ...(PUB.mine.length?[{k:'rm',q:'나는 내 약속을 지켰어?',sub:'솔직하게 골라도 괜찮아.',t:'rate',items:()=>PUB.mine,w:'내 약속에 대해 더 하고 싶은 말'}]:[]),
+ {k:'chg',q:'좋아진 점이 있으면 골라 줘',t:'multi',o:CHG_F,w:'좋아진 점을 써 봐'},
+ {k:'again',q:'선생님과 한 번 더 이야기하고 싶어?',sub:'어떤 걸 골라도 괜찮아. 이 대답은 선생님만 봐.',t:'one',o:AGAIN},
+ {k:'share',q:'좋아진 점을 친구에게 전해도 될까?',sub:'어떤 걸 골라도 괜찮아.',t:'one',o:SHARE}];
+const PF=c=>{const mine=arr(c.card&&c.card.mine),prom=curProm(c);return [
+ {t:'read',q:'지난번 약속을 함께 돌아보자',h:()=>`<div class="say good">잘 못 지킨 걸 혼내려는 자리가 아니야. 그동안 어땠는지 같이 살펴보고, 앞으로 어떻게 할지 다시 정해 보자.</div>${prom.map(x=>`<div class="say">${esc(x)}</div>`).join('')}`},
+ {k:'now',q:'요즘 체육 시간에 친구들과 함께할 때 어때?',t:'one',o:NOW_F,face:1,w:'요즘 내 마음을 써 봐'},
+ {k:'rp',q:'나는 내 약속을 지켰어?',sub:'약속마다 별을 골라 줘.',t:'rate',items:()=>prom,w:'내 약속에 대해 더 하고 싶은 말'},
+ ...(mine.length?[{k:'rm',q:'친구들은 약속을 지켰어?',t:'rate',items:()=>mine,w:'친구들 약속에 대해 더 하고 싶은 말'}]:[]),
+ {k:'chg',q:'좋아진 점이 있으면 골라 줘',t:'multi',o:CHG_P,w:'좋아진 점을 써 봐'},
+ {t:'read',q:'친구들이 말한 좋아진 점',h:()=>{const g=friendChg(c);return g.length?g.map(x=>`<div class="say good">${esc(x)}</div>`).join(''):'<p class="mut">선생님이 직접 이야기해 줄게.</p>'}},
+ {k:'next',q:'앞으로 계속할 약속을 골라 줘',sub:'잘 지킨 약속은 계속하고, 새 약속을 더해도 좋아. 세 개까지.',t:'multi',o:()=>[...new Set([...prom,...B_PROM])],max:3,w:'새 약속을 써 봐'}]};
+const friendChg=c=>{const s=new Set();caseCk(c.id).filter(r=>r.share===SHARE[0]).forEach(r=>{r.chg.forEach(x=>x!=='아직 잘 모르겠어'&&s.add(x))});return [...s]};
+async function sendCheckin(d){
+ if(!fb||!PUB||!PUB.open){toast('돌아보기가 닫혀 있어요');return}
+ if(sending)return;sending=true;render();
+ try{if(!fb.auth.currentUser)await fb.auth.signInAnonymously();d.uid=fb.auth.currentUser.uid;d.items_rp=PUB.prom;d.items_rm=PUB.mine;d.round=PUB.round||1;
+  await fb.db.ref('checkins/'+PUB.cid).push(clean(d));flow=null;sending=false;go('thanks2')}
+ catch(e){sending=false;render();toast('보내지 못했어. 선생님께 말해 줘')}}
+function archiveCase(){
+ const title=(document.getElementById('ctitle')||{}).value||'친구 관계 상담',fd=(document.getElementById('cdate')||{}).value||plusDays(7),wipe=(document.getElementById('cwipe')||{}).checked;
+ const c=cardText(),id=fb.db.ref('cases').push().key;
+ const data={title:title.trim()||'친구 관계 상담',at:new Date().toISOString(),followDate:fd,name:cardName.trim(),status:'open',follow:S.follow||'',
+  card:{prom:c.prom,bw:c.bw,mine:c.mine},boy:S.boy||null,stories:S.stories.map(s=>{const o={...s};delete o.id;return o}),pick:S.pick,picked:S.picked,note:S.note||''};
+ fb.db.ref('cases/'+id).set(clean(data)).then(()=>{if(wipe){fb.db.ref('stories').remove();fb.db.ref('teacher').remove()}curCid=id;toast('상담 기록으로 보관했어요');go('case')}).catch(()=>toast('보관하지 못했어요'))}
+function archiveHTML(){return `<div class="box"><h3>상담 기록으로 보관하기</h3><p class="mut">보관해 두면 정한 날짜에 같은 약속을 가지고 다시 상담(돌아보기)을 할 수 있어요.</p>
+ <label class="wl" for="ctitle">상담 이름</label><input id="ctitle" class="cname" placeholder="예: 체육 시간 팀 활동" maxlength="30">
+ <label class="wl" for="cdate">다시 만날 날</label><input id="cdate" class="cname" type="date" value="${plusDays(7)}">
+ <label style="display:flex;gap:8px;align-items:center;margin:12px 0"><input id="cwipe" type="checkbox" checked style="width:22px;height:22px;accent-color:var(--pri)"> 보관한 뒤 '지금 상담'을 비우고 새로 시작하기</label>
+ <button class="btn sup" data-act="archive" ${S.boy?'':'disabled'}>보관하기</button>${S.boy?'':'<p class="lock">친구와 대화를 마치고 약속 카드를 만든 뒤에 보관할 수 있어요.</p>'}</div>`}
+function casesHTML(){
+ const list=Object.entries(S.cases).map(([id,c])=>({...c,id})).sort((a,b)=>(a.status==='done')-(b.status==='done')||(a.followDate||'').localeCompare(b.followDate||''));
+ return list.length?list.map(c=>`<div class="box"><div class="row2" style="justify-content:space-between"><h3>${esc(c.title)}</h3><span class="tag" style="${isDue(c)?'background:var(--pri);color:#fff':''}">${c.status==='done'?'마무리됨':'다시 만날 날 '+esc(c.followDate||'')+' · '+dday(c.followDate)}</span></div>
+  <p class="mut">처음 상담 ${new Date(c.at).toLocaleDateString('ko-KR')} · 돌아보기 ${rounds(c).length}번 · 친구들 응답 ${caseCk(c.id).length}개</p><button class="btn ghost sm" data-act="opencase" data-i="${esc(c.id)}">열기</button></div>`).join('')
+ :'<div class="box"><p>아직 보관한 상담이 없어요. \'지금 상담\'에서 약속 카드를 만든 뒤 보관해 주세요.</p></div>'}
+const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+const stars=v=>v?'★'.repeat(Math.round(v))+'☆'.repeat(3-Math.round(v))+` ${v.toFixed(1)}`:'응답 없음';
+function rateRows(items,lists){return items.map((it,i)=>{const sc=lists.map(l=>l[i]).filter(Boolean);return `<div class="br" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto"><span>${esc(it)}</span><div class="bar"><i style="width:${avg(sc)/3*100}%"></i></div><b style="white-space:nowrap;font-size:14px">${stars(avg(sc))}</b></div>`}).join('')}
+function caseHTML(){
+ const c=S.cases[curCid];if(!c)return `<p>상담 기록을 찾을 수 없어요.</p><button class="btn ghost sm" data-act="tabcases">상담 기록으로</button>`;
+ c.id=curCid;const ck=caseCk(curCid),rs=rounds(c),prom=curProm(c),mine=arr(c.card&&c.card.mine),open=PUB&&PUB.open&&PUB.cid===curCid,last=rs[rs.length-1];
+ const st=arr(c.stories).map(norm),before={};st.forEach(s=>arr(s.feel).forEach(f=>before[f]=(before[f]||0)+1));
+ const nowC={};ck.forEach(r=>r.now&&(nowC[r.now]=(nowC[r.now]||0)+1));
+ const again=ck.filter(r=>r.again===AGAIN[1]);
+ const fr=(o,mx)=>Object.entries(o).map(([k,n])=>`<div class="br"><span>${esc(k)}</span><div class="bar"><i style="width:${n/mx*100}%"></i></div><b>${n}</b></div>`).join('')||'<p class="mut">아직 없어요.</p>';
+ const li=a=>a.length?`<ul>${a.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<p class="mut">없음</p>';
+ return `<div class="row2" style="justify-content:space-between"><h2>${esc(c.title)}</h2><button class="btn ghost sm" data-act="tabcases">상담 기록 목록</button></div>
+ <p class="mut">처음 상담 ${new Date(c.at).toLocaleDateString('ko-KR')} · ${c.status==='done'?'마무리됨':'다시 만날 날 '+esc(c.followDate||'')+' ('+dday(c.followDate)+')'}</p>
+ ${again.length?`<div class="say" style="border-color:var(--pri)"><b>선생님과 한 번 더 이야기하고 싶다는 친구가 ${again.length}명 있어요.</b> ${again.map(r=>esc(r.ani||'')).join(', ')} — 따로 불러 이야기를 들어 주세요.</div>`:''}
+ <div class="box"><h3>지금 약속</h3><div class="cols"><div><h3>${esc(c.name||'대화한 친구')}의 약속</h3>${li(prom)}</div><div><h3>친구들의 약속</h3>${li(mine)}</div></div>
+  <label class="wl" for="fdate">다음에 다시 만날 날</label><div class="row2"><input id="fdate" class="cname" type="date" value="${esc(c.followDate||'')}" style="margin:0"><button class="btn ghost sm" data-act="setdate">날짜 바꾸기</button></div></div>
+ <div class="box"><h3>1단계 · 친구들 돌아보기</h3><p class="mut">열어 두면 친구들이 각자 태블릿 첫 화면에서 '약속 돌아보기'를 눌러 답할 수 있어요. 별점과 좋아진 점만 묻고, 다 모이면 닫아 주세요.</p>
+  <div class="row2">${open?`<span class="tag" style="background:var(--sup);color:#fff">열려 있음 · 이번 응답 ${ck.filter(r=>r.round===PUB.round).length}개</span><button class="btn ghost sm" data-act="closeck">돌아보기 닫기</button>`:`<button class="btn sup sm" data-act="openck">친구들 돌아보기 열기</button>`}</div></div>
+ <div class="box"><h3>2단계 · 대화한 친구와 돌아보기</h3><p class="mut">선생님 기기로 함께 진행해요. 지난 약속을 돌아보고, 친구들이 말한 좋아진 점을 보여 준 뒤 다음 약속을 정해요.</p>
+  <button class="btn sup" data-act="pstart">대화한 친구와 돌아보기 시작</button></div>
+ <div class="box"><h3>결과 비교</h3>
+  <h3 style="font-size:17px;margin-top:10px">처음 상담 때 친구들의 마음</h3>${fr(before,Math.max(1,...Object.values(before)))}
+  <h3 style="font-size:17px;margin-top:14px">돌아보기 때 친구들의 마음</h3>${fr(nowC,Math.max(1,...Object.values(nowC)))}
+  ${last?`<p style="margin-top:10px"><b>대화한 친구의 마음:</b> ${esc(last.partner.now||'')}</p>`:''}
+  <h3 style="font-size:17px;margin-top:14px">${esc(c.name||'대화한 친구')}의 약속 — 친구들이 본 별점</h3>${(()=>{const fi=ck.length?ck[ck.length-1].items_rp:prom;return rateRows(fi,ck.filter(r=>r.items_rp.join('|')===fi.join('|')).map(r=>r.rp))})()}
+  ${last?`<h3 style="font-size:17px;margin-top:14px">스스로 매긴 별점 (${rs.length}번째 돌아보기)</h3>${rateRows(arr(last.items_rp),[arr(last.partner.rp)])}`:''}
+  ${mine.length?`<h3 style="font-size:17px;margin-top:14px">친구들의 약속 — 스스로 매긴 별점</h3>${rateRows(mine,ck.map(r=>r.rm))}`:''}
+  <h3 style="font-size:17px;margin-top:14px">친구들이 말한 좋아진 점</h3>${li(friendChg(c))}</div>
+ <div class="box"><h3>친구별 돌아보기 기록</h3>${ck.length?ck.map(r=>`<details><summary>${esc(r.ani||'')} · ${esc(r.now||'')} · ${new Date(r.at).toLocaleDateString('ko-KR')}${r.again===AGAIN[1]?' · 다시 이야기하고 싶어요':''}</summary>
+  ${['now','rp','rm','chg'].map(k=>(r[k+'_t']||'').trim()?`<div class="say">✏️ ${esc(r[k+'_t'])}</div>`:'').join('')}<p class="mut">좋아진 점: ${esc(r.chg.join(', ')||'-')} · ${r.share===SHARE[0]?'전달 동의':'선생님만'}</p>
+  <button class="btn ghost sm" data-act="delck" data-i="${esc(r.id)}">이 기록 지우기</button></details>`).join(''):'<p class="mut">아직 없어요.</p>'}</div>
+ ${rs.length?`<div class="box"><h3>돌아보기 기록</h3>${rs.map((r,i)=>`<details><summary>${i+1}번째 · ${new Date(r.at).toLocaleDateString('ko-KR')} · ${esc(r.partner.now||'')}</summary><p><b>다음 약속</b></p>${li(r.next)}${['now','rp','rm','chg','next'].map(k=>(r.partner[k+'_t']||'').trim()?`<div class="say">✏️ ${esc(r.partner[k+'_t'])}</div>`:'').join('')}</details>`).join('')}
+  <div class="row2" style="margin-top:10px"><button class="btn" data-act="revimg">돌아보기 카드 이미지 만들기</button></div></div>`:''}
+ <div class="box"><h3>마무리</h3><div class="row2"><button class="btn ghost sm" data-act="done">${c.status==='done'?'다시 진행 중으로 바꾸기':'상담 마무리하기'}</button>
+  <button class="btn ghost sm" data-act="delcase">${caseArm===curCid?'정말 지울까요? 한 번 더 누르세요':'이 상담 기록 지우기'}</button></div></div>`}
+function reviewSpec(c){
+ const rs=rounds(c),last=rs[rs.length-1],n=c.name||'나',items=arr(last.items_rp),ck=caseCk(c.id);
+ const kept=items.filter((it,i)=>{const sc=[arr(last.partner.rp)[i],...ck.filter(r=>r.items_rp.join('|')===items.join('|')).map(r=>r.rp[i])].filter(Boolean);return avg(sc)>=2.5});
+ const g=friendChg(c);
+ return {title:'돌아보기 카드',sub:`${new Date(last.at).toLocaleDateString('ko-KR')} · ${rs.length}번째 돌아보기`,secs:[
+  {t:`${n}의 잘 지킨 약속 ★`,items:kept.length?kept:['조금씩 해 보는 중이에요. 다음엔 더 잘할 수 있어요'],col:'#e2553d',bg:'#ffe9e2'},
+  {t:'친구들이 말한 좋아진 점',items:g.length?g:['선생님이 직접 이야기해 줄게요'],col:'#1f5f6b',bg:'#e3f1f3'},
+  {t:`${n}의 다음 약속`,items:last.next,col:'#b8742a',bg:'#fff1d6'},
+  {t:'친구들의 약속',items:arr(c.card&&c.card.mine),col:'#7a5bb0',bg:'#efe8fa'}],
+  foot:c.status==='done'?'서로 노력해 줘서 고마워요. 앞으로도 함께 즐겁게!':(c.followDate?`${c.followDate}에 다시 이야기 나눠요. `:'')+'잘한 점을 먼저 찾아 칭찬해 줘요.'}}
+
 const CFG={apiKey:"AIzaSyDaIRTcQbxfp_gQUAX3gLu3tnjkm_fsuw4",authDomain:"school-counsel.firebaseapp.com",databaseURL:"https://school-counsel-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"school-counsel",storageBucket:"school-counsel.firebasestorage.app",messagingSenderId:"1088686876670",appId:"1:1088686876670:web:accd834c1f8dfcdeb602af"};
 const T_EMAIL='zpr1120@gmail.com';
-let S={stories:[],note:'',picked:false,pick:{what:[],wish:[]},boy:null};
+let S={stories:[],note:'',picked:false,pick:{what:[],wish:[]},boy:null,cases:{},checkins:{}};
 let fb=null,user=null,listening=false,loaded=false,sending=false;
 const arr=x=>Array.isArray(x)?x.filter(v=>v!=null):(x&&typeof x==='object'?Object.values(x):(x?[x]:[]));
 const AK=['when','what','feel','wish','mine','good','prom','why','pe_good','pe_hard'];
@@ -124,14 +224,16 @@ const isT=()=>!!(user&&!user.isAnonymous&&user.email===T_EMAIL&&user.emailVerifi
 const typing=()=>{const a=document.activeElement;return a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT')};
 try{firebase.initializeApp(CFG);fb={auth:firebase.auth(),db:firebase.database()};
  fb.auth.getRedirectResult().catch(e=>toast('로그인하지 못했어요'));
- fb.auth.onAuthStateChanged(u=>{user=u;if(isT())listen();else unlisten();if(['teacher','card','pin'].includes(view))render()});
+ fb.auth.onAuthStateChanged(u=>{user=u;if(!u){fb.auth.signInAnonymously().catch(()=>{})}else pubListen();if(isT())listen();else unlisten();if(['teacher','card','pin','case'].includes(view))render()});
 }catch(e){fb=null}
 function listen(){if(listening)return;listening=true;
  fb.db.ref('stories').on('value',snap=>{const v=snap.val()||{},prev=S.stories.length;S.stories=Object.entries(v).map(([id,s])=>({...norm(s),id})).sort((a,b)=>a.at<b.at?-1:1);
   if(loaded&&S.stories.length>prev)toast('새 이야기가 도착했어요');loaded=true;if(['teacher','card'].includes(view)&&!typing())render()},e=>toast('기록을 읽을 권한이 없어요'));
  fb.db.ref('teacher/state').on('value',snap=>{const v=snap.val()||{};S.note=v.note||'';S.follow=v.follow||'';S.picked=!!v.picked;
-  S.pick={what:arr(v.pick&&v.pick.what),wish:arr(v.pick&&v.pick.wish)};S.boy=v.boy?norm(v.boy):null;if(['teacher','card'].includes(view)&&!typing())render()})}
-function unlisten(){if(!listening)return;listening=false;loaded=false;fb.db.ref('stories').off();fb.db.ref('teacher/state').off();S.stories=[];S.boy=null}
+  S.pick={what:arr(v.pick&&v.pick.what),wish:arr(v.pick&&v.pick.wish)};S.boy=v.boy?norm(v.boy):null;if(['teacher','card'].includes(view)&&!typing())render()});
+ fb.db.ref('cases').on('value',snap=>{S.cases=snap.val()||{};if(['teacher','case'].includes(view)&&!typing())render()});
+ fb.db.ref('checkins').on('value',snap=>{const v=snap.val()||{},n=Object.values(v).reduce((a,o)=>a+Object.keys(o||{}).length,0),p=Object.values(S.checkins).reduce((a,o)=>a+Object.keys(o||{}).length,0);S.checkins=v;if(loaded&&n>p)toast('새 돌아보기가 도착했어요');if(['teacher','case'].includes(view)&&!typing())render()})}
+function unlisten(){if(!listening)return;listening=false;loaded=false;fb.db.ref('stories').off();fb.db.ref('teacher/state').off();fb.db.ref('cases').off();fb.db.ref('checkins').off();S.stories=[];S.boy=null;S.cases={};S.checkins={}}
 const setState=patch=>{if(isT())fb.db.ref('teacher/state').update(patch).catch(()=>toast('저장하지 못했어요'))};
 let noteT=null;const debState=patch=>{clearTimeout(noteT);noteT=setTimeout(()=>setState(patch),500)};
 const clean=o=>JSON.parse(JSON.stringify(o));
@@ -195,7 +297,7 @@ const bridge=`<svg viewBox="0 0 600 230" role="img" aria-label="두 언덕을 �
 function render(){
  if(view==='home') app.innerHTML=`<div class="hero">${bridge}
   <h1>마음 다리</h1><p>말하기 어려웠던 마음을 선생님께 살짝 전해 줘. 누르기만 하면 돼.</p>
-  <div class="row2"><button class="btn" data-act="girl">내 이야기 들려주기</button>
+  <div class="row2"><button class="btn" data-act="girl">내 이야기 들려주기</button>${PUB&&PUB.open&&PUB.prom&&PUB.prom.length?'<button class="btn sup" data-act="fstart">약속 돌아보기</button>':''}
   <button class="hold" data-act="teacher">선생님 화면</button></div></div>
   <p class="mut" style="margin-top:14px">보낸 이야기는 선생님만 볼 수 있어요.</p>`;
  else if(view==='flow') app.innerHTML=flowHTML();
@@ -204,20 +306,23 @@ function render(){
  else if(view==='pin') app.innerHTML=pinHTML();
  else if(view==='teacher') app.innerHTML=authed?(isT()?teacherHTML():loginHTML()):pinHTML();
  else if(view==='card') app.innerHTML=isT()?cardHTML():loginHTML();
+ else if(view==='case') app.innerHTML=isT()?caseHTML():loginHTML();
+ else if(view==='thanks2') app.innerHTML=`<div class="hero">${bridge}<h2>돌아봐 줘서 고마워</h2><p>약속을 지키려고 노력한 너도, 친구도 멋져. 선생님이 잘 읽어 볼게.</p><div><button class="btn" data-act="home">처음으로</button></div></div>`;
 }
 
 function startFlow(steps,who){flow={steps,i:0,d:{},who};view='flow';render();scrollTo(0,0)}
-function valid(st){if(st.t==='read'||st.t==='text')return true;const v=flow.d[st.k];if(st.w&&(flow.d[st.k+'_t']||'').trim())return true;return Array.isArray(v)?v.length>0:!!v}
+function valid(st){if(st.t==='read'||st.t==='text')return true;if(st.t==='rate'){const v=flow.d[st.k]||[];return st.items().every((_,i)=>v[i])}const v=flow.d[st.k];if(st.w&&(flow.d[st.k+'_t']||'').trim())return true;return Array.isArray(v)?v.length>0:!!v}
 function flowHTML(){
  const st=flow.steps[flow.i],n=flow.steps.length,last=flow.i===n-1,v=flow.d[st.k];
  const dots=`<div class="dots" aria-label="${flow.i+1} / ${n}">${flow.steps.map((_,j)=>`<i class="${j<=flow.i?'on':''}"></i>`).join('')}</div>`;
  let body='';
  if(st.t==='read') body=`<div style="margin:20px 0">${st.h()}</div>`;
  else if(st.t==='text') body=`<textarea id="tx" placeholder="여기에 써도 되고, 비워 둬도 돼">${esc(v||'')}</textarea>`;
- else body=`<div class="grid${st.face?' face':''}">${st.o.map((o,j)=>{const on=st.t==='one'?v===o:(v||[]).includes(o);return `<button class="chip${st.face?' big':''}" data-act="chip" data-j="${j}" aria-pressed="${on}">${chipLbl(o)}</button>`}).join('')}</div>`+(st.max?`<p class="mut">최대 ${st.max}개까지 고를 수 있어.</p>`:'')+(st.w?`<label class="wl" for="w">✏️ 직접 쓰기 <span class="mut">(안 써도 돼)</span></label><textarea id="w" class="w" placeholder="${esc(st.w)}">${esc(flow.d[st.k+'_t']||'')}</textarea>`:'');
+ else if(st.t==='rate') body=`<div style="margin:20px 0;display:grid;gap:14px">${st.items().map((it,i)=>`<div class="box" style="margin:0"><p style="font-size:19px;margin:0 0 10px">${esc(it)}</p><div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr));margin:0">${RATE.map(([sc,st2,lb])=>`<button class="chip big" data-act="rate" data-i="${i}" data-s="${sc}" aria-pressed="${(v||[])[i]===sc}"><b style="font-size:22px">${st2}</b>${lb}</button>`).join('')}</div></div>`).join('')}</div>`+(st.w?`<label class="wl" for="w">✏️ 직접 쓰기 <span class="mut">(안 써도 돼)</span></label><textarea id="w" class="w" placeholder="${esc(st.w)}">${esc(flow.d[st.k+'_t']||'')}</textarea>`:'');
+ else body=`<div class="grid${st.face?' face':''}">${opts(st).map((o,j)=>{const on=st.t==='one'?v===o:(v||[]).includes(o);return `<button class="chip${st.face?' big':''}" data-act="chip" data-j="${j}" aria-pressed="${on}">${chipLbl(o)}</button>`}).join('')}</div>`+(st.max?`<p class="mut">최대 ${st.max}개까지 고를 수 있어.</p>`:'')+(st.w?`<label class="wl" for="w">✏️ 직접 쓰기 <span class="mut">(안 써도 돼)</span></label><textarea id="w" class="w" placeholder="${esc(st.w)}">${esc(flow.d[st.k+'_t']||'')}</textarea>`:'');
  return `${dots}<h2>${esc(st.q)}</h2>${st.sub?`<p class="mut">${esc(st.sub)}</p>`:''}${body}
  <div class="nav"><button class="btn ghost sm" data-act="${flow.i?'prev':'quit'}">${flow.i?'이전':'그만하기'}</button>
- <button class="btn" data-act="next" ${valid(st)&&!sending?'':'disabled'}>${last?(flow.who==='g'?(sending?'보내는 중…':'선생님께 보내기'):'약속 카드 만들기'):'다음'}</button></div>`;
+ <button class="btn" data-act="next" ${valid(st)&&!sending?'':'disabled'}>${last?(flow.who==='g'||flow.who==='f'?(sending?'보내는 중…':'선생님께 보내기'):flow.who==='p'?'돌아보기 마치기':'약속 카드 만들기'):'다음'}</button></div>`;
 }
 
 function counts(k,opts){const c=opts.map(o=>[o,S.stories.filter(s=>(Array.isArray(s[k])?s[k]:[s[k]]).includes(o)).length]);return c.filter(x=>x[1]>0)}
@@ -226,11 +331,17 @@ function bars(title,k,opts,pick){
  return `<div class="box"><h3>${title}</h3>${pick?'<p class="lock">체크한 내용만 대화할 친구의 화면에 보여요. 선생님만 알고 있기로 한 내용은 고를 수 없어요.</p>':''}
  ${c.length?c.map(([o,n])=>`<div class="br"><label>${pick?`<input type="checkbox" data-pick="${k}" value="${esc(o)}" ${pk.includes(o)?'checked':''} ${sh.includes(o)?'':'disabled'}>`:''}<span>${esc(o)}</span></label><div class="bar"><i style="width:${n/max*100}%"></i></div><b>${n}</b></div>`).join(''):'<p class="mut">아직 없어요.</p>'}</div>`;
 }
+let tTab='now';
 function teacherHTML(){
- const n=S.stories.length,sh=shared().length;
+ const due=Object.values(S.cases).filter(isDue).length;
  return `<div class="row2" style="justify-content:space-between"><h2>선생님 정리</h2><div class="row2"><button class="btn ghost sm" data-act="glogout">로그아웃</button><button class="btn ghost sm" data-act="home">처음 화면</button></div></div>
  <p class="lock">● 실시간 연결됨 · 새 이야기가 오면 바로 나타나요</p>
- <details class="box" ${n?'':'open'}><summary class="jua">상담 진행 가이드</summary>
+ <div class="row2" role="tablist" style="margin:6px 0 4px"><button class="btn ${tTab==='now'?'':'ghost'} sm" data-act="tabnow">지금 상담</button><button class="btn ${tTab==='cases'?'':'ghost'} sm" data-act="tabcases">상담 기록 · 재상담${due?` (${due})`:''}</button></div>
+ ${due&&tTab==='now'?`<div class="say" style="border-color:var(--pri)">다시 만날 날이 된 상담이 ${due}개 있어요. '상담 기록' 탭에서 확인해 주세요.</div>`:''}
+ ${tTab==='cases'?casesHTML():nowHTML()}`}
+function nowHTML(){
+ const n=S.stories.length,sh=shared().length;
+ return `<details class="box" ${n?'':'open'}><summary class="jua">상담 진행 가이드</summary>
  <ol><li><b>이야기를 들려줄 친구들과 따로 듣기</b> — 여럿이 함께 말하면 의견이 한쪽으로 쏠려요. 한 명씩 이 앱으로 이야기를 남기게 해 주세요.</li><li><b>행동과 영향을 나눠 보기</b> — "고집이 세다" 대신 "팀을 정할 때 먼저 정해 버려서 말하기 어려웠다"처럼요.</li><li><b>대화할 친구의 이야기 먼저 듣기</b> — 대화 화면은 체육 시간에 좋은 점과 답답한 점을 먼저 묻고 시작해요.</li><li><b>작은 약속 정하고 다시 확인하기</b> — 며칠 뒤 각자 따로 물어봐 주세요.</li></ol>
  <div class="say good">처음 꺼내는 말: "누가 잘못했는지 정하려는 자리가 아니야. 체육 시간에 서로 편하게 참여하려면 무엇을 바꾸면 좋을지 함께 알아보자."</div>
  <h3 style="margin-top:12px">대화 전 확인</h3><ul><li>상담 목적과 비밀을 지키는 범위를 쉬운 말로 설명했나요?</li><li>"무섭다"가 어떤 행동·상황인지 구체적으로 물었나요?</li><li>"소심하다"는 평가 대신, 의견을 말하기 쉬운 환경인지 살펴봤나요?</li><li>여러 친구가 함께 한 친구를 마주하는 방식은 피했나요?</li></ul>
@@ -247,6 +358,7 @@ function teacherHTML(){
   <textarea id="note" placeholder="선생님의 한마디 (예: 너와 친구들이 체육 시간을 더 즐겁게 보냈으면 해서 이야기를 나누려고 해)">${esc(S.note)}</textarea>
   <label class="wl" for="follow">다시 확인할 때</label><textarea id="follow" class="w" placeholder="예: 다음 주 체육 수업 뒤, 각자 따로 짧게 확인하기">${esc(S.follow||'')}</textarea>
   <div class="row2"><button class="btn ghost sm" data-act="sum" ${sh?'':'disabled'}>중립 요약 복사</button><button class="btn sup" data-act="boy" ${sh?'':'disabled'}>친구와 대화 시작</button>${S.boy?'<button class="btn ghost sm" data-act="card">지난 약속 카드 보기</button>':''}</div></div>
+ ${archiveHTML()}
  <div class="row2" style="margin-top:24px"><button class="btn ghost sm" data-act="wipe">${wipeArm?'정말 모두 지울까요? 한 번 더 누르세요':'모든 기록 지우기'}</button></div>`;
 }
 function cardText(){
@@ -254,17 +366,16 @@ function cardText(){
  const ad=(a,t)=>{t=(t||'').trim();return t?[...a,t]:a};
  return {prom:ad(b.prom||[],b.prom_t),bw:ad(b.wish||[],b.wish_t),mine:m,feel:ad(b.feel||[],b.feel_t),why:ad(b.why||[],b.why_t),pg:ad(b.pe_good||[],b.pe_good_t),ph:ad(b.pe_hard||[],b.pe_hard_t),date:b.at?new Date(b.at).toLocaleDateString('ko-KR'):''};
 }
-async function makeCard(){
- const c=cardText(),h=hd(),W=1080,P=72,font='"Gowun Dodum",sans-serif',jua='"Gowun Batang",serif';
- const secs=[{t:h.a,items:c.prom,col:'#e2553d',bg:'#ffe9e2'},{t:h.b,items:c.bw,col:'#1f5f6b',bg:'#e3f1f3'},{t:'친구들의 약속',items:c.mine,col:'#b8742a',bg:'#fff1d6'}];
- const follow=((S.follow||'').trim()||'일주일 뒤에 선생님과 다시 이야기 나눠요.');
- const all='우리의 약속 카드 잘 지킨 점을 먼저 찾아봐요 마음 다리 함께 정해요 선생님과 '+secs.map(x=>x.t+x.items.join('')).join('')+follow+c.date+'0123456789.·';
+function promiseSpec(){const c=cardText(),h=hd();return {title:'우리의 약속 카드',sub:c.date+' · 마음 다리',secs:[{t:h.a,items:c.prom,col:'#e2553d',bg:'#ffe9e2'},{t:h.b,items:c.bw,col:'#1f5f6b',bg:'#e3f1f3'},{t:'친구들의 약속',items:c.mine,col:'#b8742a',bg:'#fff1d6'}],foot:((S.follow||'').trim()||'일주일 뒤에 선생님과 다시 이야기 나눠요.')+' 잘 지킨 점을 먼저 찾아봐요.'}}
+async function makeCard(sp){
+ const W=1080,P=72,font='"Gowun Dodum",sans-serif',jua='"Gowun Batang",serif',secs=sp.secs;
+ const all=sp.title+sp.sub+sp.foot+'선생님과 함께 정해요 마음 다리 ★'+secs.map(x=>x.t+x.items.join('')).join('')+'0123456789.·';
  try{await Promise.all([document.fonts.load('bold 64px "Gowun Batang"',all),document.fonts.load('40px "Gowun Dodum"',all)])}catch(e){}
  const cv=document.createElement('canvas'),x=cv.getContext('2d');
  const wrap=(t,f,max)=>{x.font=f;const out=[];let line='';for(const ch of String(t)){const tl=line+ch;if(x.measureText(tl).width>max&&line){const sp=line.lastIndexOf(' ');if(sp>line.length*0.5&&ch!==' '){out.push(line.slice(0,sp));line=line.slice(sp+1)+ch}else{out.push(line);line=ch.trim()}}else line=tl}if(line)out.push(line);return out};
  const BF='40px '+font,HF='bold 44px '+jua,LH=58,IW=W-P*2-56-40;
  const lay=secs.map(sc=>{const ht=wrap(sc.t,HF,W-P*2-56);const items=(sc.items.length?sc.items:['선생님과 함께 정해요']).map(it=>wrap(it,BF,IW));const n=items.reduce((a,b)=>a+b.length,0);return {...sc,ht,items,h:40+ht.length*56+16+n*LH+(items.length-1)*14+36}});
- const fl=wrap(follow+' 잘 지킨 점을 먼저 찾아봐요.',BF,W-P*2);
+ const fl=wrap(sp.foot,BF,W-P*2);
  const HEAD=430,H=HEAD+lay.reduce((a,b)=>a+b.h+28,0)+fl.length*LH+150;
  cv.width=W;cv.height=H;
  x.fillStyle='#fff4e8';x.fillRect(0,0,W,H);
@@ -275,8 +386,8 @@ async function makeCard(){
  x.fillStyle='#8cc9d1';x.fillRect(340,HEAD-70,W-680,70);
  x.strokeStyle='#7a4a3a';x.lineWidth=16;x.lineCap='round';x.beginPath();x.moveTo(320,312);x.quadraticCurveTo(W/2,190,W-320,312);x.stroke();
  const hx=W/2,hy=236;x.fillStyle='#e2553d';x.beginPath();x.moveTo(hx,hy+26);x.bezierCurveTo(hx-46,hy-6,hx-24,hy-44,hx,hy-18);x.bezierCurveTo(hx+24,hy-44,hx+46,hy-6,hx,hy+26);x.fill();
- x.fillStyle='#2d2522';x.textBaseline='top';x.font='bold 76px '+jua;x.fillText('우리의 약속 카드',P,64);
- x.font='36px '+font;x.fillStyle='#6b5a52';x.fillText(c.date+' · 마음 다리',P,160);
+ x.fillStyle='#2d2522';x.textBaseline='top';x.font='bold 76px '+jua;x.fillText(sp.title,P,64);
+ x.font='36px '+font;x.fillStyle='#6b5a52';x.fillText(sp.sub,P,160);
  let y=HEAD+30;
  const rr=(X,Y,w,h,r)=>{x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+w,Y,X+w,Y+h,r);x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.closePath()};
  lay.forEach(sc=>{rr(P,y,W-P*2,sc.h,32);x.fillStyle=sc.bg;x.fill();
@@ -287,14 +398,14 @@ async function makeCard(){
  x.fillStyle='#e2553d';x.font='bold 32px '+jua;x.fillText('♥ 마음 다리',P,H-80);
  return new Promise(r=>cv.toBlob(r,'image/png'));
 }
-async function showCard(){
+async function showCard(sp,label){
  toast('카드를 만들고 있어요');
- const blob=await makeCard();if(!blob){toast('이미지를 만들지 못했어요');return}
- const url=URL.createObjectURL(blob),name=`약속카드-${(cardName.trim()||'우리')}-${new Date().toISOString().slice(0,10)}.png`;
+ const blob=await makeCard(sp);if(!blob){toast('이미지를 만들지 못했어요');return}
+ const url=URL.createObjectURL(blob),name=`${label}-${new Date().toISOString().slice(0,10)}.png`;
  const file=new File([blob],name,{type:'image/png'}),canShare=!!(navigator.canShare&&navigator.canShare({files:[file]}));
  const w=document.createElement('div');w.className='imgw';
  w.innerHTML=`<div><img alt="약속 카드 이미지" src="${url}"><div class="row2"><a class="btn" href="${url}" download="${esc(name)}" style="text-decoration:none;display:inline-flex;align-items:center">이미지 저장</a>${canShare?'<button class="btn sup" data-s>보내기</button>':''}<button class="btn ghost sm" data-c>닫기</button></div><p class="mut">이미지를 저장해서 학생 태블릿이나 클래스 앱으로 보내 주세요.</p></div>`;
- w.addEventListener('click',async e=>{if(e.target===w||e.target.closest('[data-c]')){w.remove();URL.revokeObjectURL(url)}else if(e.target.closest('[data-s]')){try{await navigator.share({files:[file],title:'우리의 약속 카드'})}catch(err){}}});
+ w.addEventListener('click',async e=>{if(e.target===w||e.target.closest('[data-c]')){w.remove();URL.revokeObjectURL(url)}else if(e.target.closest('[data-s]')){try{await navigator.share({files:[file],title:sp.title})}catch(err){}}});
  document.body.appendChild(w);
 }
 let cardName='';
@@ -306,19 +417,19 @@ function cardHTML(){
  <div class="cols"><div><h3 id="h1">${esc(hd().a)}</h3>${li(c.prom)}</div><div><h3 id="h2">${esc(hd().b)}</h3>${li(c.bw)}</div><div><h3>친구들의 약속</h3>${li(c.mine)}</div></div>
  <details><summary>선생님만 보기: 대화한 친구의 마음과 이야기</summary><h3 style="margin-top:8px">체육 시간에 좋은 점</h3>${li(c.pg)}<h3>답답했던 점</h3>${li(c.ph)}<h3>이야기를 들은 마음</h3>${li(c.feel)}<h3>사실은…</h3>${li(c.why)}</details>
  <p class="mut">${esc((S.follow||'').trim()||'일주일 뒤에 선생님과 다시 이야기 나눠요.')} 잘 지킨 점을 먼저 찾아봐요.</p></div>
- <div class="row2" style="margin-top:18px"><button class="btn" data-act="img">카드 이미지 만들기</button><button class="btn sup sm" data-act="copy">글로 복사하기</button><button class="btn ghost sm" data-act="teacher">선생님 정리로</button></div>`;
+ <div class="row2" style="margin-top:18px"><button class="btn" data-act="img">카드 이미지 만들기</button><button class="btn sup sm" data-act="copy">글로 복사하기</button><button class="btn ghost sm" data-act="teacher">선생님 정리로</button></div>${archiveHTML()}`;
 }
 
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1800)}
-function go(v){if((v==='teacher'||v==='card')&&!authed)v='pin';if(v==='home')authed=false;view=v;render();scrollTo(0,0)}
+function go(v){if(['teacher','card','case'].includes(v)&&!authed)v='pin';if(v==='home')authed=false;view=v;render();scrollTo(0,0)}
 
 app.addEventListener('click',e=>{
  const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act;
  if(a!=='wipe')wipeArm=false;
  if(a==='girl'){authed=false;startFlow(G,'g')}
  else if(a==='boy')startFlow(B,'b');
- else if(a==='home'||a==='quit'){const toT=a==='quit'&&flow&&flow.who==='b';flow=null;go(toT?'teacher':'home')}
- else if(a==='chip'){const st=flow.steps[flow.i],o=st.o[+b.dataset.j];
+ else if(a==='home'||a==='quit'){const w=a==='quit'&&flow&&flow.who;flow=null;go(w==='b'?'teacher':w==='p'?'case':'home')}
+ else if(a==='chip'){const st=flow.steps[flow.i],o=opts(st)[+b.dataset.j];
   if(st.t==='one')flow.d[st.k]=o;
   else{let v=flow.d[st.k]||[];if(v.includes(o))v=v.filter(x=>x!==o);else{if(st.max&&v.length>=st.max){toast(`${st.max}개까지 고를 수 있어`);return}v=[...v,o]}flow.d[st.k]=v}
   render()}
@@ -326,10 +437,24 @@ app.addEventListener('click',e=>{
  else if(a==='next'){
   if(flow.i<flow.steps.length-1){flow.i++;render();scrollTo(0,0);return}
   const d={...flow.d,at:new Date().toISOString()};
-  if(flow.who==='g'){sendStory(d)}else{S.boy=d;setState({boy:clean(d)});flow=null;go('card')}}
+  if(flow.who==='g'){sendStory(d)}else if(flow.who==='f'){sendCheckin(d)}else if(flow.who==='p'){const c=S.cases[curCid];const nx=[...(d.next||[]),...((d.next_t||'').trim()?[d.next_t.trim()]:[])];const pd={...d};delete pd.next;delete pd.next_t;fb.db.ref('cases/'+curCid+'/rounds').push(clean({at:d.at,partner:pd,next:nx,items_rp:curProm({...c,id:curCid}),items_rm:arr(c.card&&c.card.mine)})).then(()=>toast('돌아보기를 저장했어요'));flow=null;go('case')}else{S.boy=d;setState({boy:clean(d)});flow=null;go('card')}}
  else if(a==='teacher')go('teacher');
  else if(a==='pk')pinKey(b.dataset.k);
- else if(a==='img')showCard();
+ else if(a==='img')showCard(promiseSpec(),'약속카드-'+(cardName.trim()||'우리'));
+ else if(a==='revimg'){const c={...S.cases[curCid],id:curCid};showCard(reviewSpec(c),'돌아보기카드-'+(c.name||'우리'))}
+ else if(a==='rate'){const st=flow.steps[flow.i],v=[...(flow.d[st.k]||[])];v[+b.dataset.i]=+b.dataset.s;for(let i=0;i<st.items().length;i++)if(v[i]==null)v[i]=0;flow.d[st.k]=v;render()}
+ else if(a==='fstart'){if(PUB&&PUB.open){authed=false;startFlow(CF(),'f')}}
+ else if(a==='archive')archiveCase();
+ else if(a==='tabnow'){tTab='now';render()}
+ else if(a==='tabcases'){tTab='cases';go('teacher')}
+ else if(a==='opencase'){curCid=b.dataset.i;caseArm='';go('case')}
+ else if(a==='openck'){const c={...S.cases[curCid],id:curCid};fb.db.ref('public/checkin').set(clean({open:true,cid:curCid,prom:curProm(c),mine:arr(c.card&&c.card.mine),round:rounds(c).length+1})).then(()=>toast('친구들 돌아보기를 열었어요'))}
+ else if(a==='closeck'){fb.db.ref('public/checkin').set({open:false}).then(()=>toast('돌아보기를 닫았어요'))}
+ else if(a==='pstart'){const c={...S.cases[curCid],id:curCid};if(!curProm(c).length){toast('약속이 없어요');return}startFlow(PF(c),'p')}
+ else if(a==='setdate'){const v=(document.getElementById('fdate')||{}).value;if(v)fb.db.ref('cases/'+curCid).update({followDate:v,status:'open'}).then(()=>toast('날짜를 바꿨어요'))}
+ else if(a==='done'){const c=S.cases[curCid];fb.db.ref('cases/'+curCid).update({status:c.status==='done'?'open':'done'})}
+ else if(a==='delck'){fb.db.ref('checkins/'+curCid+'/'+b.dataset.i).remove()}
+ else if(a==='delcase'){if(caseArm!==curCid){caseArm=curCid;render();return}caseArm='';fb.db.ref('checkins/'+curCid).remove();fb.db.ref('cases/'+curCid).remove();if(PUB&&PUB.cid===curCid)fb.db.ref('public/checkin').set({open:false});tTab='cases';go('teacher')}
  else if(a==='sum'){const sh=shared(),f=(k,x)=>{const a=union(k,sh);return a.length?a.map(y=>'- '+y).join('\n'):'- (더 확인해 보기)'};
   const txt=`친구 관계 대화 요약 (이름·발언자 없이 정리)\n\n[자주 나온 상황]\n${f('when')}\n\n[힘들었던 일]\n${f('what')}\n\n[친구들이 바라는 것]\n${f('wish')}\n\n[친구들이 스스로 해 볼 것]\n${f('mine').replace('- 아직 잘 모르겠어\n','')}\n\n[친구의 좋은 점]\n${f('good')}\n\n※ 전달에 동의한 이야기만 모았어요. 직접 쓴 글은 빠져 있어요.`;
   try{navigator.clipboard.writeText(txt).then(()=>toast('요약을 복사했어요'),()=>toast('복사가 막혀 있어요'))}catch(err){toast('복사가 막혀 있어요')}}
